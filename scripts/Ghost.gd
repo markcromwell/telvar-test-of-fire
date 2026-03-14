@@ -224,3 +224,6 @@ func _spawn_eaten_particles() -> void:
 
 func set_invulnerable(val: bool) -> void:
 	_is_invulnerable = val
+
+func set_speed(val: float) -> void:
+	_speed = val

@@ -108,6 +108,18 @@ check("GameManager: add_score uses multiplier",     "points * _score_multiplier"
 sp = open("scripts/SpellPage.gd", encoding="utf-8").read() if os.path.isfile("scripts/SpellPage.gd") else ""
 check("SpellPage: passes page_name to GameManager", "collect_spell_page(page_name)" in sp)
 
+
+# -- Phase 3 fixes: Ghost.gd set_speed + Undead.gd API alignment ----------------
+gh = open("scripts/Ghost.gd", encoding="utf-8").read() if os.path.isfile("scripts/Ghost.gd") else ""
+un = open("scripts/Undead.gd", encoding="utf-8").read() if os.path.isfile("scripts/Undead.gd") else ""
+check("Ghost.gd: set_speed() setter added",          "func set_speed(" in gh)
+check("Undead.gd: no behavior/Behavior refs",         "behavior" not in un)
+check("Undead.gd: no base_speed ref",                 "base_speed" not in un)
+check("Undead.gd: uses current_state",                "current_state" in un)
+check("Undead.gd: calls set_speed()",                 "set_speed(" in un)
+check("Undead.gd: super._ready() before set_speed",
+      un.index("super._ready()") < un.index("set_speed(") if "super._ready()" in un and "set_speed(" in un else False)
+
 # ── Report ───────────────────────────────────────────────────────────────────
 total = len(PASS) + len(FAIL)
 print(f"\nTelvar Validator — {len(PASS)} pass, {len(FAIL)} fail, {total} checks")
