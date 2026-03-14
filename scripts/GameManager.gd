@@ -48,9 +48,13 @@ var score_multiplier: int = 1
 var _bonus_spawned: bool = false
 var _perfect_casting_possible: bool = true
 
-var _banish_timer: Timer
-var _multiplier_timer: Timer
-var _radar_timer: Timer
+# Elemental Guardian vulnerability (Level 4)
+var elemental_vulnerable := false
+
+# Subtitle toggle (default on)
+var subtitle_enabled := true
+
+var _banish_timer := 0.0
 
 
 func _ready() -> void:

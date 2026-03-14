@@ -1,442 +1,87 @@
-[gd_scene load_steps=12 format=3 uid="uid://b0level2"]
-
-[ext_resource type="Script" path="res://scripts/LevelManager.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/Player.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/Ghost.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/SpellPage.gd" id="4"]
-[ext_resource type="Script" path="res://scripts/UI.gd" id="5"]
-[ext_resource type="Script" path="res://scripts/SpellMeter.gd" id="6"]
-[ext_resource type="Script" path="res://scripts/SphereOfDarkness.gd" id="7"]
-[ext_resource type="Script" path="res://scripts/BonusItem.gd" id="8"]
-
-[sub_resource type="RectangleShape2D" id="player_col"]
-size = Vector2(28, 28)
-
-[sub_resource type="RectangleShape2D" id="ghost_col"]
-size = Vector2(28, 28)
-
-[sub_resource type="RectangleShape2D" id="page_col"]
-size = Vector2(20, 20)
-
-[sub_resource type="RectangleShape2D" id="sphere_col"]
-size = Vector2(24, 24)
+[gd_scene format=3 uid="uid://level2001"]
 
 [node name="Level2" type="Node2D"]
-script = ExtResource("1")
-level_index = 2
-level_display_name = "Binding Chamber"
-lore_text = "The Wizard Council once counted a hundred Albus mages. Now there are three."
-next_level_scene = "res://scenes/Level3.tscn"
+script = ExtResource("res://scripts/Level2.gd")
 
-[node name="Background" type="ColorRect" parent="."]
-offset_right = 1280.0
-offset_bottom = 720.0
-color = Color(0.2, 0.1, 0.3, 1)
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
 
-[node name="Walls" type="TileMapLayer" parent="."]
-
-[node name="Player" type="CharacterBody2D" parent="." groups=["player"]]
-position = Vector2(64, 64)
-collision_layer = 2
-collision_mask = 1
-script = ExtResource("2")
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(640, 400)
+script = ExtResource("res://scripts/Player.gd")
 
 [node name="Sprite2D" type="Sprite2D" parent="Player"]
-modulate = Color(0.2, 0.6, 1, 1)
-scale = Vector2(2, 2)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
-shape = SubResource("player_col")
-
-[node name="RayCast2D" type="RayCast2D" parent="Player"]
-target_position = Vector2(32, 0)
-collision_mask = 1
-
-[node name="PatrolZone" type="Area2D" parent="."]
-position = Vector2(640, 360)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PatrolZone"]
-shape = SubResource("ghost_col")
-
-[node name="AemonGuardian" type="CharacterBody2D" parent="." groups=["ghosts"]]
-position = Vector2(608, 320)
-collision_layer = 4
-collision_mask = 3
-script = ExtResource("3")
-behavior = 0
-base_speed = 80.0
-
-[node name="Sprite2D" type="Sprite2D" parent="AemonGuardian"]
-modulate = Color(1, 0, 0, 1)
-scale = Vector2(2, 2)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AemonGuardian"]
-shape = SubResource("ghost_col")
-
-[node name="RayCast2D" type="RayCast2D" parent="AemonGuardian"]
-target_position = Vector2(32, 0)
-collision_mask = 1
-
-[node name="AbyssalCreature" type="CharacterBody2D" parent="." groups=["ghosts"]]
-position = Vector2(640, 360)
-collision_layer = 4
-collision_mask = 3
-script = ExtResource("3")
-behavior = 1
-base_speed = 75.0
-patrol_zone = NodePath("../PatrolZone")
-
-[node name="Sprite2D" type="Sprite2D" parent="AbyssalCreature"]
-modulate = Color(1, 0.4, 0.7, 1)
-scale = Vector2(2, 2)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AbyssalCreature"]
-shape = SubResource("ghost_col")
-
-[node name="RayCast2D" type="RayCast2D" parent="AbyssalCreature"]
-target_position = Vector2(32, 0)
-collision_mask = 1
-
-[node name="UnpredictableGhost" type="CharacterBody2D" parent="." groups=["ghosts"]]
-position = Vector2(672, 320)
-collision_layer = 4
-collision_mask = 3
-script = ExtResource("3")
-behavior = 2
-base_speed = 70.0
-
-[node name="Sprite2D" type="Sprite2D" parent="UnpredictableGhost"]
-modulate = Color(0.8, 0.6, 0, 1)
-scale = Vector2(2, 2)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="UnpredictableGhost"]
-shape = SubResource("ghost_col")
-
-[node name="RayCast2D" type="RayCast2D" parent="UnpredictableGhost"]
-target_position = Vector2(32, 0)
-collision_mask = 1
 
 [node name="SpellPages" type="Node2D" parent="."]
 
-[node name="BindingSpell" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(128, 128)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Binding Spell"
-page_index = 0
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/BindingSpell"]
-modulate = Color(1, 0.84, 0, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/BindingSpell"]
-shape = SubResource("page_col")
-
-[node name="IscandiousGambit" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(256, 128)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Iscandious Gambit"
-page_index = 1
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/IscandiousGambit"]
-modulate = Color(0.2, 0.8, 0.2, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/IscandiousGambit"]
-shape = SubResource("page_col")
-
-[node name="WardingPrayer" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(384, 192)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Warding Prayer"
-page_index = 3
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/WardingPrayer"]
-modulate = Color(0.3, 0.5, 1, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/WardingPrayer"]
-shape = SubResource("page_col")
-
-[node name="Transmutation" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(512, 256)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Transmutation"
-page_index = 4
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Transmutation"]
-modulate = Color(0.6, 0.2, 0.8, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Transmutation"]
-shape = SubResource("page_col")
-
-[node name="SitPruina" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(640, 320)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Sit pruina liquefaciet"
-is_key_page = true
-page_index = 5
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/SitPruina"]
-modulate = Color(0.5, 1, 0.5, 1)
-scale = Vector2(1, 1)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/SitPruina"]
-shape = SubResource("page_col")
-
-[node name="ShadowflameRitual" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(768, 384)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Shadowflame Ritual"
-page_index = 6
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/ShadowflameRitual"]
-modulate = Color(0.8, 0.3, 0.1, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/ShadowflameRitual"]
-shape = SubResource("page_col")
-
-[node name="AetherInvocation" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(896, 448)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Aether Invocation"
-page_index = 7
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/AetherInvocation"]
-modulate = Color(0.5, 0.8, 1, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/AetherInvocation"]
-shape = SubResource("page_col")
-
-[node name="ArcanumVitae" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(192, 384)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Arcanum Vitae"
-page_index = 8
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/ArcanumVitae"]
-modulate = Color(1, 1, 0.5, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/ArcanumVitae"]
-shape = SubResource("page_col")
-
-[node name="LuxAeterna" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(320, 480)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Lux Aeterna"
-page_index = 9
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/LuxAeterna"]
-modulate = Color(1, 1, 0.7, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/LuxAeterna"]
-shape = SubResource("page_col")
-
-[node name="IgnisProtego" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(960, 192)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Ignis Protego"
-page_index = 10
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/IgnisProtego"]
-modulate = Color(1, 0.5, 0.2, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/IgnisProtego"]
-shape = SubResource("page_col")
-
-[node name="NoxUmbra" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(1088, 320)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("4")
-page_name = "Nox Umbra"
-page_index = 11
-
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/NoxUmbra"]
-modulate = Color(0.4, 0.2, 0.6, 1)
-scale = Vector2(0.8, 0.8)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/NoxUmbra"]
-shape = SubResource("page_col")
-
-[node name="SphereOfDarkness" type="Area2D" parent="."]
-position = Vector2(640, 544)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("7")
-
-[node name="Sprite2D" type="Sprite2D" parent="SphereOfDarkness"]
-modulate = Color(0.1, 0.05, 0.15, 1)
-scale = Vector2(1.2, 1.2)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SphereOfDarkness"]
-shape = SubResource("sphere_col")
-
-[node name="BonusItems" type="Node2D" parent="."]
-
-[node name="AtensGrace" type="Area2D" parent="BonusItems"]
-position = Vector2(448, 544)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("8")
-bonus_type = 0
-
-[node name="Sprite2D" type="Sprite2D" parent="BonusItems/AtensGrace"]
-modulate = Color(1, 0.9, 0.3, 1)
-scale = Vector2(0.7, 0.7)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BonusItems/AtensGrace"]
-shape = SubResource("page_col")
-
-[node name="CoroniumShard" type="Area2D" parent="BonusItems"]
-position = Vector2(832, 544)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("8")
-bonus_type = 1
-
-[node name="Sprite2D" type="Sprite2D" parent="BonusItems/CoroniumShard"]
-modulate = Color(0.3, 0.9, 1, 1)
-scale = Vector2(0.7, 0.7)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BonusItems/CoroniumShard"]
-shape = SubResource("page_col")
-
-[node name="SabathasHeirloom" type="Area2D" parent="BonusItems"]
-position = Vector2(1024, 480)
-collision_layer = 8
-collision_mask = 2
-script = ExtResource("8")
-bonus_type = 2
-is_hidden = true
-
-[node name="Sprite2D" type="Sprite2D" parent="BonusItems/SabathasHeirloom"]
-modulate = Color(0.8, 0.6, 0.9, 1)
-scale = Vector2(0.7, 0.7)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BonusItems/SabathasHeirloom"]
-shape = SubResource("page_col")
-
-[node name="RankGem" type="Sprite2D" parent="."]
-position = Vector2(640, 360)
-modulate = Color(0.6, 0.2, 0.8, 1)
-scale = Vector2(2, 2)
-visible = false
-
-[node name="GemPedestal1" type="Sprite2D" parent="."]
-position = Vector2(320, 240)
-modulate = Color(0.6, 0.2, 0.8, 1)
-scale = Vector2(1.5, 1.5)
-
-[node name="GemPedestal2" type="Sprite2D" parent="."]
-position = Vector2(960, 240)
-modulate = Color(0.6, 0.2, 0.8, 1)
-scale = Vector2(1.5, 1.5)
-
-[node name="GemPedestal3" type="Sprite2D" parent="."]
-position = Vector2(640, 540)
-modulate = Color(0.8, 0.7, 0.1, 1)
-scale = Vector2(1.5, 1.5)
+[node name="Collectibles" type="Node2D" parent="."]
 
 [node name="UI" type="CanvasLayer" parent="."]
-script = ExtResource("5")
+script = ExtResource("res://scripts/UI.gd")
 
-[node name="HUD" type="HBoxContainer" parent="UI"]
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 600.0
-offset_bottom = 40.0
-
-[node name="ScoreLabel" type="Label" parent="UI/HUD"]
+[node name="ScoreLabel" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 8.0
+offset_right = 200.0
+offset_bottom = 32.0
 text = "Score: 0"
 
-[node name="HSeparator" type="HSeparator" parent="UI/HUD"]
-custom_minimum_size = Vector2(20, 0)
-
-[node name="LivesLabel" type="Label" parent="UI/HUD"]
+[node name="LivesLabel" type="Label" parent="UI"]
+offset_left = 220.0
+offset_top = 8.0
+offset_right = 400.0
+offset_bottom = 32.0
 text = "Lives: 3"
 
-[node name="HSeparator2" type="HSeparator" parent="UI/HUD"]
-custom_minimum_size = Vector2(20, 0)
+[node name="TimerLabel" type="Label" parent="UI"]
+offset_left = 1100.0
+offset_top = 8.0
+offset_right = 1264.0
+offset_bottom = 32.0
+text = "0:00"
 
-[node name="LevelLabel" type="Label" parent="UI/HUD"]
-text = "Binding Chamber"
-
-[node name="SpellMeter" type="Control" parent="UI"]
-offset_left = 900.0
-offset_top = 10.0
-offset_right = 1270.0
-offset_bottom = 50.0
-script = ExtResource("6")
-
-[node name="ProgressBar" type="ProgressBar" parent="UI/SpellMeter"]
-offset_right = 370.0
-offset_bottom = 20.0
-
-[node name="Label" type="Label" parent="UI/SpellMeter"]
-offset_top = 22.0
-offset_right = 370.0
-offset_bottom = 40.0
-text = "Spell Meter: 0%"
-horizontal_alignment = 1
-
-[node name="LorePopup" type="PanelContainer" parent="UI"]
+[node name="LorePanel" type="Panel" parent="UI"]
 visible = false
-anchors_preset = 8
+offset_left = 240.0
+offset_top = 200.0
+offset_right = 1040.0
+offset_bottom = 520.0
+
+[node name="LoreText" type="RichTextLabel" parent="UI/LorePanel"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 784.0
+offset_bottom = 270.0
+
+[node name="ContinueButton" type="Button" parent="UI/LorePanel"]
+offset_left = 330.0
+offset_top = 280.0
+offset_right = 470.0
+offset_bottom = 310.0
+text = "Continue"
+
+[node name="SubtitleLayer" type="CanvasLayer" parent="UI"]
+layer = 10
+
+[node name="SubtitleLabel" type="RichTextLabel" parent="UI/SubtitleLayer"]
+anchors_preset = 7
 anchor_left = 0.5
-anchor_top = 0.5
+anchor_top = 1.0
 anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -250.0
+anchor_bottom = 1.0
+offset_left = -400.0
 offset_top = -80.0
-offset_right = 250.0
-offset_bottom = 80.0
-
-[node name="MarginContainer" type="MarginContainer" parent="UI/LorePopup"]
-layout_mode = 2
-
-[node name="LoreText" type="Label" parent="UI/LorePopup/MarginContainer"]
-layout_mode = 2
-text = "Lore text here"
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="RankUpLabel" type="Label" parent="UI"]
+offset_right = 400.0
+offset_bottom = -16.0
+text = ""
 visible = false
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -100.0
-offset_right = 200.0
-offset_bottom = -60.0
-text = "Rank Up!"
-horizontal_alignment = 1
+fit_content = true
+scroll_active = false
+
+[node name="RankGem" type="ColorRect" parent="UI"]
+offset_left = 590.0
+offset_top = 4.0
+offset_right = 690.0
+offset_bottom = 36.0
+color = Color(0.6, 0.2, 0.8, 1)

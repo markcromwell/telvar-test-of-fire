@@ -55,4 +55,36 @@ offset_bottom = 520.0
 offset_left = 16.0
 offset_top = 16.0
 offset_right = 784.0
-offset_bottom = 304.0
+offset_bottom = 270.0
+
+[node name="ContinueButton" type="Button" parent="UI/LorePanel"]
+offset_left = 330.0
+offset_top = 280.0
+offset_right = 470.0
+offset_bottom = 310.0
+text = "Continue"
+
+[node name="SubtitleLayer" type="CanvasLayer" parent="UI"]
+layer = 10
+
+[node name="SubtitleLabel" type="RichTextLabel" parent="UI/SubtitleLayer"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -80.0
+offset_right = 400.0
+offset_bottom = -16.0
+text = ""
+visible = false
+fit_content = true
+scroll_active = false
+
+[node name="RankGem" type="ColorRect" parent="UI"]
+offset_left = 590.0
+offset_top = 4.0
+offset_right = 690.0
+offset_bottom = 36.0
+color = Color(0.6, 0.2, 0.8, 1)
