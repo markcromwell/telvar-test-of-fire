@@ -1,64 +1,157 @@
-[gd_scene load_steps=2 format=3 uid="uid://b0main"]
+[gd_scene format=3 uid="uid://main001"]
 
-[ext_resource type="Script" path="res://scripts/MainMenu.gd" id="1"]
+[node name="Main" type="Node2D"]
 
-[node name="Main" type="Control"]
-layout_mode = 3
+[node name="Background" type="ColorRect" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource("1")
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.05, 0.02, 0.1, 1)
 
-[node name="TitleLabel" type="Label" parent="."]
-layout_mode = 1
-anchors_preset = 8
+[node name="MenuUI" type="CanvasLayer" parent="."]
+script = ExtResource("res://scripts/MainMenu.gd")
+
+[node name="LogoContainer" type="Control" parent="MenuUI"]
+anchors_preset = 5
 anchor_left = 0.5
-anchor_top = 0.5
 anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -60.0
-offset_right = 200.0
-offset_bottom = -20.0
-text = "Telvar's Test of Fire"
+offset_left = -300.0
+offset_top = 40.0
+offset_right = 300.0
+offset_bottom = 200.0
+
+[node name="LogoLabel" type="Label" parent="MenuUI/LogoContainer"]
+offset_left = 0.0
+offset_top = 20.0
+offset_right = 600.0
+offset_bottom = 80.0
+text = "TELVAR'S TEST OF FIRE"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="LivesLabel" type="Label" parent="UI"]
-offset_left = 220.0
-offset_top = 8.0
-offset_right = 400.0
-offset_bottom = 32.0
-text = "Lives: 3"
+[node name="FireParticles" type="GPUParticles2D" parent="MenuUI/LogoContainer"]
+position = Vector2(300, 100)
+amount = 40
+lifetime = 1.5
+visibility_rect = Rect2(-300, -100, 600, 200)
 
-[node name="TimerLabel" type="Label" parent="UI"]
-offset_left = 1100.0
-offset_top = 8.0
-offset_right = 1264.0
-offset_bottom = 32.0
-text = "0:00"
-
-[node name="SubtitleLayer" type="CanvasLayer" parent="UI"]
-layer = 10
-
-[node name="SubtitleLabel" type="RichTextLabel" parent="UI/SubtitleLayer"]
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -400.0
-offset_top = -80.0
-offset_right = 400.0
-offset_bottom = -16.0
-text = ""
-visible = false
-fit_content = true
-scroll_active = false
-
-[node name="RankGem" type="ColorRect" parent="UI"]
-offset_left = 590.0
-offset_top = 4.0
-offset_right = 690.0
-offset_bottom = 36.0
+[node name="GemRect" type="ColorRect" parent="MenuUI/LogoContainer"]
+offset_left = 260.0
+offset_top = 100.0
+offset_right = 340.0
+offset_bottom = 140.0
 color = Color(0.6, 0.2, 0.8, 1)
+
+[node name="MenuPanel" type="Control" parent="MenuUI"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -120.0
+offset_top = 280.0
+offset_right = 120.0
+offset_bottom = 560.0
+
+[node name="PlayButton" type="Button" parent="MenuUI/MenuPanel"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 240.0
+offset_bottom = 50.0
+text = "Play"
+
+[node name="HowToPlayButton" type="Button" parent="MenuUI/MenuPanel"]
+offset_left = 0.0
+offset_top = 60.0
+offset_right = 240.0
+offset_bottom = 110.0
+text = "How to Play"
+
+[node name="CreditsButton" type="Button" parent="MenuUI/MenuPanel"]
+offset_left = 0.0
+offset_top = 120.0
+offset_right = 240.0
+offset_bottom = 170.0
+text = "Credits"
+
+[node name="PreOrderButton" type="Button" parent="MenuUI/MenuPanel"]
+offset_left = 0.0
+offset_top = 180.0
+offset_right = 240.0
+offset_bottom = 230.0
+text = "Pre-Order Volume 4"
+
+[node name="HowToPlayPanel" type="Panel" parent="MenuUI"]
 visible = false
+offset_left = 240.0
+offset_top = 120.0
+offset_right = 1040.0
+offset_bottom = 600.0
+
+[node name="HowToPlayText" type="RichTextLabel" parent="MenuUI/HowToPlayPanel"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 784.0
+offset_bottom = 420.0
+text = "HOW TO PLAY
+
+Use Arrow Keys to move Telvar through each level.
+
+Collect all 12 Spell Pages to fill your Spell Meter.
+When the meter is full, Banish Mode activates — ghosts flee and can be eaten for bonus points!
+
+Collect Spheres of Darkness to instantly fill the Spell Meter.
+
+Bonus Items:
+- Aten's Grace: Reveals ghost positions for 5 seconds
+- Coronium Shard: Double points for 10 seconds
+- Sabatha's Heirloom: Hidden bonus in each level
+
+Beware the Hound of Fenrir — it defeats you in one hit unless banished!
+
+Complete all 6 levels to discover Telvar's fate."
+
+[node name="CloseButton" type="Button" parent="MenuUI/HowToPlayPanel"]
+offset_left = 340.0
+offset_top = 430.0
+offset_right = 460.0
+offset_bottom = 465.0
+text = "Close"
+
+[node name="CreditsPanel" type="Panel" parent="MenuUI"]
+visible = false
+offset_left = 340.0
+offset_top = 150.0
+offset_right = 940.0
+offset_bottom = 570.0
+
+[node name="CreditsText" type="RichTextLabel" parent="MenuUI/CreditsPanel"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 584.0
+offset_bottom = 360.0
+text = "TELVAR'S TEST OF FIRE
+
+A free HTML5 demo tied to the Medias novel series.
+
+Game Design & Development
+Medias Interactive
+
+Music & Sound
+ElevenLabs AI Voice Lines
+
+Engine
+Godot 4.3
+
+Special Thanks
+The Medias community and all who dare
+step into the fire.
+
+medias-novels.com"
+
+[node name="CloseButton" type="Button" parent="MenuUI/CreditsPanel"]
+offset_left = 220.0
+offset_top = 370.0
+offset_right = 380.0
+offset_bottom = 405.0
+text = "Close"
