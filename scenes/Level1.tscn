@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://level1_scene"]
+[gd_scene load_steps=28 format=3 uid="uid://level1_scene"]
 
 [ext_resource type="Script" path="res://scripts/Level1.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/Player.gd" id="2_player"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/SpellPage.gd" id="4_page"]
 [ext_resource type="PackedScene" uid="uid://hud_scene" path="res://scenes/HUD.tscn" id="5_hud"]
 [ext_resource type="Script" path="res://scripts/SphereOfDarkness.gd" id="6_sphere"]
+[ext_resource type="Script" path="res://scripts/LevelExit.gd" id="7_exit"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_top"]
 size = Vector2(672, 8)
@@ -101,7 +102,7 @@ position = Vector2(672, 372)
 shape = SubResource("RectangleShape2D_right")
 
 [node name="Player" type="CharacterBody2D" parent="."]
-position = Vector2(336, 564)
+position = Vector2(324, 564)
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("2_player")
@@ -118,7 +119,7 @@ collision_mask = 1
 [node name="Ghosts" type="Node2D" parent="."]
 
 [node name="AemonGuardian" type="CharacterBody2D" parent="Ghosts"]
-position = Vector2(324, 324)
+position = Vector2(300, 348)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_ghost")
@@ -133,7 +134,7 @@ shape = SubResource("RectangleShape2D_ghost")
 collision_mask = 1
 
 [node name="AbyssalCreature" type="CharacterBody2D" parent="Ghosts"]
-position = Vector2(348, 324)
+position = Vector2(372, 348)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_ghost")
@@ -150,7 +151,7 @@ collision_mask = 1
 [node name="SpellPages" type="Node2D" parent="."]
 
 [node name="Page1" type="Area2D" parent="SpellPages"]
-position = Vector2(48, 48)
+position = Vector2(36, 36)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -162,7 +163,7 @@ page_name = "Ignis Scroll"
 shape = SubResource("RectangleShape2D_page1")
 
 [node name="Page2" type="Area2D" parent="SpellPages"]
-position = Vector2(624, 48)
+position = Vector2(636, 36)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -174,7 +175,7 @@ page_name = "Aqua Verse"
 shape = SubResource("RectangleShape2D_page2")
 
 [node name="Page3" type="Area2D" parent="SpellPages"]
-position = Vector2(48, 696)
+position = Vector2(36, 708)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -186,7 +187,7 @@ page_name = "Terra Glyph"
 shape = SubResource("RectangleShape2D_page3")
 
 [node name="Page4" type="Area2D" parent="SpellPages"]
-position = Vector2(624, 696)
+position = Vector2(636, 708)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -198,7 +199,7 @@ page_name = "Ventus Rune"
 shape = SubResource("RectangleShape2D_page4")
 
 [node name="Page5" type="Area2D" parent="SpellPages"]
-position = Vector2(168, 168)
+position = Vector2(156, 204)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -210,7 +211,7 @@ page_name = "Lux Fragment"
 shape = SubResource("RectangleShape2D_page5")
 
 [node name="Page6" type="Area2D" parent="SpellPages"]
-position = Vector2(504, 168)
+position = Vector2(516, 204)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -222,7 +223,7 @@ page_name = "Umbra Sigil"
 shape = SubResource("RectangleShape2D_page6")
 
 [node name="Page7" type="Area2D" parent="SpellPages"]
-position = Vector2(168, 372)
+position = Vector2(300, 276)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -234,7 +235,7 @@ page_name = "Chrono Seal"
 shape = SubResource("RectangleShape2D_page7")
 
 [node name="Page8" type="Area2D" parent="SpellPages"]
-position = Vector2(504, 372)
+position = Vector2(372, 276)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -246,7 +247,7 @@ page_name = "Aether Bind"
 shape = SubResource("RectangleShape2D_page8")
 
 [node name="Page9" type="Area2D" parent="SpellPages"]
-position = Vector2(336, 168)
+position = Vector2(36, 492)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -258,7 +259,7 @@ page_name = "Vita Chant"
 shape = SubResource("RectangleShape2D_page9")
 
 [node name="Page10" type="Area2D" parent="SpellPages"]
-position = Vector2(336, 504)
+position = Vector2(636, 492)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -270,7 +271,7 @@ page_name = "Mortis Hex"
 shape = SubResource("RectangleShape2D_page10")
 
 [node name="Page11" type="Area2D" parent="SpellPages"]
-position = Vector2(120, 504)
+position = Vector2(228, 636)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -282,7 +283,7 @@ page_name = "Arcana Key"
 shape = SubResource("RectangleShape2D_page11")
 
 [node name="Page12" type="Area2D" parent="SpellPages"]
-position = Vector2(552, 504)
+position = Vector2(444, 636)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -294,12 +295,21 @@ page_name = "Nexus Ward"
 shape = SubResource("RectangleShape2D_page12")
 
 [node name="SphereOfDarkness" type="Area2D" parent="."]
-position = Vector2(336, 372)
+position = Vector2(324, 420)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("6_sphere")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SphereOfDarkness"]
 shape = SubResource("CircleShape2D_sphere")
+
+[node name="LevelExit" type="Area2D" parent="."]
+position = Vector2(156, 36)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("7_exit")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LevelExit"]
+shape = SubResource("RectangleShape2D_player")
 
 [node name="HUD" parent="." instance=ExtResource("5_hud")]
