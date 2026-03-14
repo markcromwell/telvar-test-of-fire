@@ -1,32 +1,35 @@
-extends TextureProgressBar
+extends Control
 
-## Spell Meter: fills 1/12 per Spell Page collected.
-## Emits spell_cast when full, then resets.
+# Circular spell meter ring that fills as pages are collected.
 
-signal spell_cast
+@onready var meter_ring: TextureProgressBar = $MeterRing if has_node("MeterRing") else null
 
-const PAGES_TO_FILL := 12
-const FILL_PER_PAGE := 100.0 / PAGES_TO_FILL  # ~8.33% per page
-
-var pages_collected := 0
+var current_value: float = 0.0
+var target_value: float = 0.0
+const FILL_SPEED := 2.0
 
 
 func _ready() -> void:
-	min_value = 0.0
-	max_value = 100.0
-	value = 0.0
-	fill_mode = TextureProgressBar.FILL_CLOCKWISE
+	GameManager.spell_meter_changed.connect(_on_meter_changed)
+	_update_display()
 
 
-func collect_page() -> void:
-	pages_collected += 1
-	value = pages_collected * FILL_PER_PAGE
-
-	if pages_collected >= PAGES_TO_FILL:
-		spell_cast.emit()
-		reset_meter()
+func _process(delta: float) -> void:
+	if abs(current_value - target_value) > 0.001:
+		current_value = move_toward(current_value, target_value, delta * FILL_SPEED)
+		_update_display()
 
 
-func reset_meter() -> void:
-	pages_collected = 0
-	value = 0.0
+func _on_meter_changed(value: float) -> void:
+	target_value = value
+
+
+func _update_display() -> void:
+	if meter_ring:
+		meter_ring.value = current_value * 100.0
+
+
+func reset() -> void:
+	current_value = 0.0
+	target_value = 0.0
+	_update_display()
