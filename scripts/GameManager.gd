@@ -95,7 +95,7 @@ func collect_spell_page(page_name: String = "") -> void:
 	spell_meter = float(spell_pages_collected) / float(TOTAL_SPELL_PAGES)
 	spell_meter_changed.emit(spell_meter)
 	page_collected.emit(page_name)
-	if not _bonus_item_emitted and spell_pages_collected >= TOTAL_SPELL_PAGES / 2:
+	if not _bonus_item_emitted and spell_pages_collected * 2 >= TOTAL_SPELL_PAGES:
 		_bonus_item_emitted = true
 		bonus_item_available.emit()
 	if spell_pages_collected >= TOTAL_SPELL_PAGES:
