@@ -17,12 +17,44 @@ var _player_spawn: Vector2 = Vector2(336, 564)
 
 func _ready() -> void:
 	_setup_level()
+	_setup_camera()
 	GameManager.banish_mode_started.connect(_on_banish_started)
 	GameManager.banish_mode_ended.connect(_on_banish_ended)
 	if hud:
 		hud.set_level_name(level_name)
 		hud.restart_pressed.connect(_restart_level)
 		hud.quit_pressed.connect(_quit_to_title)
+
+
+func _setup_camera() -> void:
+	var cam := Camera2D.new()
+	cam.position = Vector2(336, 372)
+	cam.zoom = Vector2(0.87, 0.87)
+	add_child(cam)
+	cam.make_current()
+
+
+func _physics_process(_delta: float) -> void:
+	if not _player or not is_instance_valid(_player):
+		return
+	if not _player.is_alive:
+		return
+	for ghost in _ghosts:
+		if not is_instance_valid(ghost):
+			continue
+		if _player.position.distance_to(ghost.position) < 14.0:
+			_handle_ghost_contact(ghost)
+
+
+func _handle_ghost_contact(ghost: CharacterBody2D) -> void:
+	# State enum: SCATTER=0, CHASE=1, FRIGHTENED=2, EATEN=3
+	var state: int = ghost.get("current_state") if ghost.get("current_state") != null else -1
+	if state == 2:
+		if ghost.has_method("get_banished"):
+			ghost.get_banished()
+	elif state == 0 or state == 1:
+		if _player.has_method("hit_by_ghost"):
+			_player.hit_by_ghost()
 
 
 func _make_pixel_texture(w: int, h: int, color: Color) -> ImageTexture:

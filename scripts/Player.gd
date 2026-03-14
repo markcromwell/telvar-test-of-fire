@@ -74,6 +74,8 @@ func _move_toward_target(delta: float) -> void:
 		is_moving = false
 	else:
 		position += move_vec
+	position.x = clampf(position.x, 12.0, 660.0)
+	position.y = clampf(position.y, 12.0, 732.0)
 
 
 func _can_move(direction: Vector2) -> bool:
