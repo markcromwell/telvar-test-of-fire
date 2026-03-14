@@ -120,6 +120,14 @@ check("Undead.gd: calls set_speed()",                 "set_speed(" in un)
 check("Undead.gd: super._ready() before set_speed",
       un.index("super._ready()") < un.index("set_speed(") if "super._ready()" in un and "set_speed(" in un else False)
 
+
+# -- Phase 4 fixes: AudioManager stubs ------------------------------------------
+am = open("scripts/AudioManager.gd", encoding="utf-8").read() if os.path.isfile("scripts/AudioManager.gd") else ""
+check("AudioManager: play_game_start()",   "func play_game_start()" in am)
+check("AudioManager: play_level_start()",  "func play_level_start(" in am)
+check("AudioManager: play_banish_mode()",  "func play_banish_mode()" in am)
+check("AudioManager: play_death_taunt()",  "func play_death_taunt()" in am)
+
 # ── Report ───────────────────────────────────────────────────────────────────
 total = len(PASS) + len(FAIL)
 print(f"\nTelvar Validator — {len(PASS)} pass, {len(FAIL)} fail, {total} checks")

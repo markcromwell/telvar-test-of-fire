@@ -51,3 +51,18 @@ func play_music() -> void:
 
 func stop_music() -> void:
 	_music_player.stop()
+
+func play_game_start() -> void:
+	play_music()
+
+
+func play_level_start(_level: int) -> void:
+	play_music()
+
+
+func play_banish_mode() -> void:
+	pass
+
+
+func play_death_taunt() -> void:
+	pass
