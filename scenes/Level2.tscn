@@ -1,131 +1,264 @@
-[gd_scene format=3 uid="uid://level2001"]
+[gd_scene load_steps=6 format=3 uid="uid://level2_scene"]
+
+[ext_resource type="Script" path="res://scripts/Level2.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/Player.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/Ghost.gd" id="3_ghost"]
+[ext_resource type="Script" path="res://scripts/SpellPage.gd" id="4_page"]
+[ext_resource type="PackedScene" uid="uid://hud_scene" path="res://scenes/HUD.tscn" id="5_hud"]
 
 [node name="Level2" type="Node2D"]
-script = ExtResource("res://scripts/Level2.gd")
+script = ExtResource("1_level")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="."]
+[node name="MazeWalls" type="Node2D" parent="."]
+
+[node name="TopWall" type="StaticBody2D" parent="MazeWalls"]
+collision_layer = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MazeWalls/TopWall"]
+position = Vector2(336, 0)
+shape = SubResource("RectangleShape2D_w1")
+
+[node name="BottomWall" type="StaticBody2D" parent="MazeWalls"]
+collision_layer = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MazeWalls/BottomWall"]
+position = Vector2(336, 744)
+shape = SubResource("RectangleShape2D_w2")
+
+[node name="LeftWall" type="StaticBody2D" parent="MazeWalls"]
+collision_layer = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MazeWalls/LeftWall"]
+position = Vector2(0, 372)
+shape = SubResource("RectangleShape2D_w3")
+
+[node name="RightWall" type="StaticBody2D" parent="MazeWalls"]
+collision_layer = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MazeWalls/RightWall"]
+position = Vector2(672, 372)
+shape = SubResource("RectangleShape2D_w4")
 
 [node name="Player" type="CharacterBody2D" parent="."]
-position = Vector2(640, 400)
-script = ExtResource("res://scripts/Player.gd")
+position = Vector2(336, 564)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("2_player")
 
 [node name="Sprite2D" type="Sprite2D" parent="Player"]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+shape = SubResource("RectangleShape2D_p")
+
+[node name="RayCast2D" type="RayCast2D" parent="Player"]
+collision_mask = 1
+
+[node name="Ghosts" type="Node2D" parent="."]
+
+[node name="AemonGuardian" type="CharacterBody2D" parent="Ghosts"]
+position = Vector2(336, 276)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_ghost")
+ghost_type = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Ghosts/AemonGuardian"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ghosts/AemonGuardian"]
+shape = SubResource("RectangleShape2D_g1")
+
+[node name="RayCast2D" type="RayCast2D" parent="Ghosts/AemonGuardian"]
+collision_mask = 1
+
+[node name="AbyssalCreature" type="CharacterBody2D" parent="Ghosts"]
+position = Vector2(360, 276)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_ghost")
+ghost_type = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="Ghosts/AbyssalCreature"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ghosts/AbyssalCreature"]
+shape = SubResource("RectangleShape2D_g2")
+
+[node name="RayCast2D" type="RayCast2D" parent="Ghosts/AbyssalCreature"]
+collision_mask = 1
+
+[node name="Undead" type="CharacterBody2D" parent="Ghosts"]
+position = Vector2(312, 276)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_ghost")
+ghost_type = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="Ghosts/Undead"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ghosts/Undead"]
+shape = SubResource("RectangleShape2D_g3")
+
+[node name="RayCast2D" type="RayCast2D" parent="Ghosts/Undead"]
+collision_mask = 1
 
 [node name="SpellPages" type="Node2D" parent="."]
 
-[node name="Collectibles" type="Node2D" parent="."]
+[node name="Page1" type="Area2D" parent="SpellPages"]
+position = Vector2(48, 48)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
 
-[node name="UI" type="CanvasLayer" parent="."]
-script = ExtResource("res://scripts/UI.gd")
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page1"]
 
-[node name="ScoreLabel" type="Label" parent="UI"]
-offset_left = 16.0
-offset_top = 8.0
-offset_right = 200.0
-offset_bottom = 32.0
-text = "Score: 0"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page1"]
+shape = SubResource("RectangleShape2D_sp")
 
-[node name="LivesLabel" type="Label" parent="UI"]
-offset_left = 220.0
-offset_top = 8.0
-offset_right = 400.0
-offset_bottom = 32.0
-text = "Lives: 3"
+[node name="Page2" type="Area2D" parent="SpellPages"]
+position = Vector2(624, 48)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
 
-[node name="TimerLabel" type="Label" parent="UI"]
-offset_left = 1100.0
-offset_top = 8.0
-offset_right = 1264.0
-offset_bottom = 32.0
-text = "0:00"
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page2"]
 
-[node name="LorePanel" type="Panel" parent="UI"]
-visible = false
-offset_left = 240.0
-offset_top = 200.0
-offset_right = 1040.0
-offset_bottom = 520.0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page2"]
+shape = SubResource("RectangleShape2D_sp")
 
-[node name="LoreText" type="RichTextLabel" parent="UI/LorePanel"]
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 784.0
-offset_bottom = 270.0
+[node name="Page3" type="Area2D" parent="SpellPages"]
+position = Vector2(48, 696)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
 
-[node name="ContinueButton" type="Button" parent="UI/LorePanel"]
-offset_left = 330.0
-offset_top = 280.0
-offset_right = 470.0
-offset_bottom = 310.0
-text = "Continue"
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page3"]
 
-[node name="SubtitleLayer" type="CanvasLayer" parent="UI"]
-layer = 10
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page3"]
+shape = SubResource("RectangleShape2D_sp")
 
-[node name="SubtitleLabel" type="RichTextLabel" parent="UI/SubtitleLayer"]
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -400.0
-offset_top = -80.0
-offset_right = 400.0
-offset_bottom = -16.0
-text = ""
-visible = false
-fit_content = true
-scroll_active = false
+[node name="Page4" type="Area2D" parent="SpellPages"]
+position = Vector2(624, 696)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
 
-[node name="RankGem" type="ColorRect" parent="UI"]
-offset_left = 590.0
-offset_top = 4.0
-offset_right = 690.0
-offset_bottom = 36.0
-color = Color(0.6, 0.2, 0.8, 1)
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page4"]
 
-[node name="GameOverPanel" type="Panel" parent="UI"]
-visible = false
-offset_left = 340.0
-offset_top = 180.0
-offset_right = 940.0
-offset_bottom = 540.0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page4"]
+shape = SubResource("RectangleShape2D_sp")
 
-[node name="GameOverLabel" type="Label" parent="UI/GameOverPanel"]
-offset_left = 16.0
-offset_top = 30.0
-offset_right = 584.0
-offset_bottom = 80.0
-text = "The Council was right about you..."
-horizontal_alignment = 1
+[node name="Page5" type="Area2D" parent="SpellPages"]
+position = Vector2(168, 168)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
 
-[node name="GameOverScore" type="Label" parent="UI/GameOverPanel"]
-offset_left = 16.0
-offset_top = 100.0
-offset_right = 584.0
-offset_bottom = 130.0
-text = "Score: 0"
-horizontal_alignment = 1
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page5"]
 
-[node name="RestartButton" type="Button" parent="UI/GameOverPanel"]
-offset_left = 175.0
-offset_top = 170.0
-offset_right = 425.0
-offset_bottom = 215.0
-text = "Restart Level"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page5"]
+shape = SubResource("RectangleShape2D_sp")
 
-[node name="ContinueButton" type="Button" parent="UI/GameOverPanel"]
-offset_left = 175.0
-offset_top = 230.0
-offset_right = 425.0
-offset_bottom = 275.0
-text = "Continue (1 token)"
+[node name="Page6" type="Area2D" parent="SpellPages"]
+position = Vector2(504, 168)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
 
-[node name="MainMenuButton" type="Button" parent="UI/GameOverPanel"]
-offset_left = 175.0
-offset_top = 290.0
-offset_right = 425.0
-offset_bottom = 335.0
-text = "Main Menu"
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page6"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page6"]
+shape = SubResource("RectangleShape2D_sp")
+
+[node name="Page7" type="Area2D" parent="SpellPages"]
+position = Vector2(168, 372)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page7"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page7"]
+shape = SubResource("RectangleShape2D_sp")
+
+[node name="Page8" type="Area2D" parent="SpellPages"]
+position = Vector2(504, 372)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page8"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page8"]
+shape = SubResource("RectangleShape2D_sp")
+
+[node name="Page9" type="Area2D" parent="SpellPages"]
+position = Vector2(336, 120)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page9"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page9"]
+shape = SubResource("RectangleShape2D_sp")
+
+[node name="Page10" type="Area2D" parent="SpellPages"]
+position = Vector2(336, 624)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page10"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page10"]
+shape = SubResource("RectangleShape2D_sp")
+
+[node name="Page11" type="Area2D" parent="SpellPages"]
+position = Vector2(120, 504)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page11"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page11"]
+shape = SubResource("RectangleShape2D_sp")
+
+[node name="Page12" type="Area2D" parent="SpellPages"]
+position = Vector2(552, 504)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page12"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page12"]
+shape = SubResource("RectangleShape2D_sp")
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_w1"]
+size = Vector2(672, 8)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_w2"]
+size = Vector2(672, 8)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_w3"]
+size = Vector2(8, 744)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_w4"]
+size = Vector2(8, 744)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_p"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g1"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g2"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g3"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sp"]
+size = Vector2(16, 16)
