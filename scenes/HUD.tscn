@@ -1,0 +1,228 @@
+[gd_scene load_steps=3 format=3 uid="uid://hud_scene"]
+
+[ext_resource type="Script" path="res://scripts/UI.gd" id="1_ui"]
+[ext_resource type="Script" path="res://scripts/SettingsPanel.gd" id="2_settings"]
+
+[node name="HUD" type="CanvasLayer"]
+process_mode = 2
+script = ExtResource("1_ui")
+
+[node name="TopBar" type="HBoxContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 40.0
+grow_horizontal = 2
+
+[node name="ScoreLabel" type="Label" parent="TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SCORE: 0"
+
+[node name="LivesContainer" type="HBoxContainer" parent="TopBar"]
+layout_mode = 2
+
+[node name="Heart1" type="ColorRect" parent="TopBar/LivesContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(20, 20)
+color = Color(1, 0.2, 0.2, 1)
+
+[node name="Heart2" type="ColorRect" parent="TopBar/LivesContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(20, 20)
+color = Color(1, 0.2, 0.2, 1)
+
+[node name="Heart3" type="ColorRect" parent="TopBar/LivesContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(20, 20)
+color = Color(1, 0.2, 0.2, 1)
+
+[node name="RankGem" type="ColorRect" parent="TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(20, 20)
+color = Color(0.5, 0.2, 1, 1)
+
+[node name="SpellMeterControl" type="Control" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -80.0
+offset_top = 50.0
+offset_right = 0.0
+offset_bottom = 120.0
+script = ExtResource("1_ui").get_path().replace("UI.gd", "SpellMeter.gd") != "" if false else null
+
+[node name="SpellLabel" type="Label" parent="SpellMeterControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "SPELL"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BottomBar" type="HBoxContainer" parent="."]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -30.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="LevelLabel" type="Label" parent="BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ALCHEMICAL LABS"
+horizontal_alignment = 1
+
+[node name="PauseMenu" type="Control" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PausePanel" type="PanelContainer" parent="PauseMenu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -100.0
+offset_right = 120.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PauseMenu/PausePanel"]
+layout_mode = 2
+
+[node name="PauseTitle" type="Label" parent="PauseMenu/PausePanel/VBoxContainer"]
+layout_mode = 2
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="PauseMenu/PausePanel/VBoxContainer"]
+layout_mode = 2
+text = "Resume"
+
+[node name="SettingsButton" type="Button" parent="PauseMenu/PausePanel/VBoxContainer"]
+layout_mode = 2
+text = "Settings"
+
+[node name="RestartButton" type="Button" parent="PauseMenu/PausePanel/VBoxContainer"]
+layout_mode = 2
+text = "Restart"
+
+[node name="QuitButton" type="Button" parent="PauseMenu/PausePanel/VBoxContainer"]
+layout_mode = 2
+text = "Quit"
+
+[node name="LorePopup" type="Control" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LorePanel" type="PanelContainer" parent="LorePopup"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="LorePopup/LorePanel"]
+layout_mode = 2
+
+[node name="LoreText" type="Label" parent="LorePopup/LorePanel/VBoxContainer"]
+layout_mode = 2
+text = "Lore text here..."
+autowrap_mode = 2
+
+[node name="ContinueButton" type="Button" parent="LorePopup/LorePanel/VBoxContainer"]
+layout_mode = 2
+text = "Continue"
+
+[node name="SettingsMenu" type="Control" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_settings")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsMenu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -130.0
+offset_right = 150.0
+offset_bottom = 130.0
+
+[node name="SettingsTitle" type="Label" parent="SettingsMenu/VBoxContainer"]
+layout_mode = 2
+text = "SETTINGS"
+horizontal_alignment = 1
+
+[node name="ColorblindToggle" type="CheckButton" parent="SettingsMenu/VBoxContainer"]
+layout_mode = 2
+text = "Colorblind Mode"
+
+[node name="SubtitleToggle" type="CheckButton" parent="SettingsMenu/VBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "Subtitles"
+
+[node name="MusicLabel" type="Label" parent="SettingsMenu/VBoxContainer"]
+layout_mode = 2
+text = "Music Volume"
+
+[node name="MusicSlider" type="HSlider" parent="SettingsMenu/VBoxContainer"]
+layout_mode = 2
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 0.7
+
+[node name="SFXLabel" type="Label" parent="SettingsMenu/VBoxContainer"]
+layout_mode = 2
+text = "SFX Volume"
+
+[node name="SFXSlider" type="HSlider" parent="SettingsMenu/VBoxContainer"]
+layout_mode = 2
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="ResetHighScoreButton" type="Button" parent="SettingsMenu/VBoxContainer"]
+layout_mode = 2
+text = "Reset High Score"
+
+[node name="BackButton" type="Button" parent="SettingsMenu/VBoxContainer"]
+layout_mode = 2
+text = "Back"
+
+[connection signal="pressed" from="PauseMenu/PausePanel/VBoxContainer/ResumeButton" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="PauseMenu/PausePanel/VBoxContainer/SettingsButton" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="PauseMenu/PausePanel/VBoxContainer/RestartButton" to="." method="_on_restart_pressed"]
+[connection signal="pressed" from="PauseMenu/PausePanel/VBoxContainer/QuitButton" to="." method="_on_quit_pressed"]
+[connection signal="pressed" from="LorePopup/LorePanel/VBoxContainer/ContinueButton" to="." method="_on_lore_continue"]
+[connection signal="pressed" from="SettingsMenu/VBoxContainer/BackButton" to="." method="_on_settings_back"]
