@@ -19,6 +19,8 @@ const GHOST_SCORES: Array[int] = [50, 100, 200, 400]
 const PAGE_SCORE: int = 10
 const LEVEL_COUNT: int = 6
 
+var nav_grid: Array = []  # Array[Array[bool]]; nav_grid[row][col] = true if walkable
+
 var score: int = 0
 var lives: int = MAX_LIVES
 var spell_pages_collected: int = 0

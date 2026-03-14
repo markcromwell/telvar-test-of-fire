@@ -118,7 +118,7 @@ collision_mask = 1
 [node name="Ghosts" type="Node2D" parent="."]
 
 [node name="AemonGuardian" type="CharacterBody2D" parent="Ghosts"]
-position = Vector2(336, 276)
+position = Vector2(324, 324)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_ghost")
@@ -133,7 +133,7 @@ shape = SubResource("RectangleShape2D_ghost")
 collision_mask = 1
 
 [node name="AbyssalCreature" type="CharacterBody2D" parent="Ghosts"]
-position = Vector2(360, 276)
+position = Vector2(348, 324)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_ghost")

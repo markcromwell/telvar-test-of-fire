@@ -90,7 +90,78 @@ func _update_state_timer(delta: float) -> void:
 			_state_timer = SCATTER_TIME
 
 
+func _pos_to_tile(pos: Vector2) -> Vector2i:
+	return Vector2i(int(pos.x / TILE_SIZE), int(pos.y / TILE_SIZE))
+
+
+func _bfs_direction(from_pos: Vector2, to_pos: Vector2) -> Vector2:
+	var grid: Array = GameManager.nav_grid
+	if grid.is_empty():
+		return Vector2.ZERO
+	var from_tile := _pos_to_tile(from_pos)
+	var to_tile := _pos_to_tile(to_pos)
+	if from_tile == to_tile:
+		return Vector2.ZERO
+	var queue: Array = [[from_tile, Vector2.ZERO]]
+	var visited: Dictionary = {from_tile: true}
+	while not queue.is_empty():
+		var entry: Array = queue.pop_front()
+		var tile: Vector2i = entry[0]
+		var first_step: Vector2 = entry[1]
+		for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var next: Vector2i = tile + d
+			if next in visited:
+				continue
+			if next.y < 0 or next.y >= grid.size() or next.x < 0 or next.x >= grid[next.y].size():
+				continue
+			if not grid[next.y][next.x]:
+				continue
+			var step: Vector2 = Vector2(d.x, d.y) if first_step == Vector2.ZERO else first_step
+			if next == to_tile:
+				return step
+			visited[next] = true
+			queue.append([next, step])
+	return Vector2.ZERO
+
+
+func _get_bfs_target() -> Vector2:
+	if current_state == State.EATEN:
+		return home_position
+	if current_state == State.SCATTER:
+		return home_position
+	# CHASE
+	var player := _find_player()
+	if not player:
+		return Vector2.ZERO
+	match ghost_type:
+		GhostType.ABYSSAL:
+			return player.global_position + player.get("current_direction") * TILE_SIZE * 4
+		GhostType.UNDEAD:
+			if GameManager.spell_meter > 0.5:
+				_speed = BASE_SPEED * 1.2
+				return player.global_position
+			else:
+				_speed = BASE_SPEED * 0.8
+				return home_position
+		GhostType.ELEMENTAL:
+			return Vector2.ZERO  # random mover
+		_:
+			return player.global_position
+
+
 func _choose_next_direction() -> void:
+	# BFS-guided movement for non-random states
+	if current_state != State.FRIGHTENED:
+		var target := _get_bfs_target()
+		if target != Vector2.ZERO:
+			var bfs_dir := _bfs_direction(position, target)
+			if bfs_dir != Vector2.ZERO and _can_move_dir(bfs_dir):
+				current_direction = bfs_dir
+				target_position = position + bfs_dir * TILE_SIZE
+				is_moving = true
+				return
+
+	# Fallback: random valid direction (no U-turn preferred)
 	var directions: Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
 	var valid_dirs: Array[Vector2] = []
 	for dir in directions:
@@ -103,54 +174,9 @@ func _choose_next_direction() -> void:
 			valid_dirs.append(-current_direction)
 		else:
 			return
-	var chosen: Vector2 = _pick_direction(valid_dirs)
-	current_direction = chosen
-	target_position = position + chosen * TILE_SIZE
+	current_direction = valid_dirs[randi() % valid_dirs.size()]
+	target_position = position + current_direction * TILE_SIZE
 	is_moving = true
-
-
-func _pick_direction(valid_dirs: Array[Vector2]) -> Vector2:
-	if current_state == State.FRIGHTENED:
-		return valid_dirs[randi() % valid_dirs.size()]
-	if current_state == State.EATEN:
-		return _dir_toward(home_position, valid_dirs)
-	match ghost_type:
-		GhostType.AEMON:
-			var player := _find_player()
-			if player:
-				return _dir_toward(player.global_position, valid_dirs)
-		GhostType.ABYSSAL:
-			var player := _find_player()
-			if player:
-				var ahead: Vector2 = player.global_position + player.current_direction * TILE_SIZE * 4
-				return _dir_toward(ahead, valid_dirs)
-		GhostType.UNDEAD:
-			if GameManager.spell_meter > 0.5:
-				_speed = BASE_SPEED * 1.2
-				var player := _find_player()
-				if player:
-					return _dir_toward(player.global_position, valid_dirs)
-			else:
-				_speed = BASE_SPEED * 0.8
-		GhostType.ELEMENTAL:
-			return valid_dirs[randi() % valid_dirs.size()]
-		GhostType.HOUND:
-			var player := _find_player()
-			if player:
-				return _dir_toward(player.global_position, valid_dirs)
-	return valid_dirs[randi() % valid_dirs.size()]
-
-
-func _dir_toward(target: Vector2, valid_dirs: Array[Vector2]) -> Vector2:
-	var best_dir: Vector2 = valid_dirs[0]
-	var best_dist: float = INF
-	for dir in valid_dirs:
-		var next_pos: Vector2 = position + dir * TILE_SIZE
-		var dist: float = next_pos.distance_squared_to(target)
-		if dist < best_dist:
-			best_dist = dist
-			best_dir = dir
-	return best_dir
 
 
 func _move_ghost(delta: float) -> void:

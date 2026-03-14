@@ -96,6 +96,19 @@ func _build_maze_walls() -> void:
 				wall_parent.add_child(body)
 
 
+func _build_nav_grid() -> void:
+	var layout := _get_maze_layout()
+	if layout.is_empty():
+		return
+	var grid: Array = []
+	for row_str in layout:
+		var row: Array = []
+		for i in row_str.length():
+			row.append(row_str[i] == '.')
+		grid.append(row)
+	GameManager.nav_grid = grid
+
+
 func _add_wall_visuals() -> void:
 	var maze_walls := get_node_or_null("MazeWalls")
 	if not maze_walls:
@@ -119,6 +132,7 @@ func _setup_level() -> void:
 		_player_spawn = _player.position
 	_add_wall_visuals()
 	_build_maze_walls()
+	_build_nav_grid()
 	var ghost_container := get_node_or_null("Ghosts")
 	if ghost_container:
 		for child in ghost_container.get_children():
