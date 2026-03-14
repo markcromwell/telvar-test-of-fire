@@ -7,6 +7,10 @@
         "GODOT_PATH": "C:/Users/markc/Godot/Godot_v4.6.1-stable_win64.exe",
         "GOPEAK_TOOL_PROFILE": "compact"
       }
+    },
+    "nexus": {
+      "command": "python",
+      "args": ["C:/Users/markc/Projects/master-control-program/nexus.py"]
     }
   }
 }
