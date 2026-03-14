@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://main001"]
+
+[node name="Main" type="Node2D"]
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("res://scripts/UI.gd")
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 8.0
+offset_right = 200.0
+offset_bottom = 32.0
+text = "Score: 0"
+
+[node name="LivesLabel" type="Label" parent="UI"]
+offset_left = 220.0
+offset_top = 8.0
+offset_right = 400.0
+offset_bottom = 32.0
+text = "Lives: 3"
+
+[node name="TimerLabel" type="Label" parent="UI"]
+offset_left = 1100.0
+offset_top = 8.0
+offset_right = 1264.0
+offset_bottom = 32.0
+text = "0:00"

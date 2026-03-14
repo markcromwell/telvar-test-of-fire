@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://lvltemplate001"]
+
+[node name="LevelTemplate" type="Node2D"]
+script = ExtResource("res://scripts/LevelManager.gd")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(640, 400)
+script = ExtResource("res://scripts/Player.gd")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+
+[node name="SpellPages" type="Node2D" parent="."]
+
+[node name="Collectibles" type="Node2D" parent="."]

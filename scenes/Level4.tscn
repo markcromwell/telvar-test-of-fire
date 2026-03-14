@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://level4001"]
+
+[node name="Level4" type="Node2D"]
+script = ExtResource("res://scripts/Level4.gd")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(640, 400)
+script = ExtResource("res://scripts/Player.gd")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+
+[node name="SpellPages" type="Node2D" parent="."]
+
+[node name="Collectibles" type="Node2D" parent="."]
+
+[node name="SphereOfDarkness" type="Area2D" parent="Collectibles"]
+position = Vector2(320, 360)
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("res://scripts/UI.gd")
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 8.0
+offset_right = 200.0
+offset_bottom = 32.0
+text = "Score: 0"
+
+[node name="LivesLabel" type="Label" parent="UI"]
+offset_left = 220.0
+offset_top = 8.0
+offset_right = 400.0
+offset_bottom = 32.0
+text = "Lives: 3"
+
+[node name="TimerLabel" type="Label" parent="UI"]
+offset_left = 1100.0
+offset_top = 8.0
+offset_right = 1264.0
+offset_bottom = 32.0
+text = "0:00"
+
+[node name="LorePanel" type="Panel" parent="UI"]
+visible = false
+offset_left = 240.0
+offset_top = 200.0
+offset_right = 1040.0
+offset_bottom = 520.0
+
+[node name="LoreText" type="RichTextLabel" parent="UI/LorePanel"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 784.0
+offset_bottom = 304.0
