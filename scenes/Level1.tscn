@@ -1,0 +1,42 @@
+[gd_scene load_steps=2 format=3 uid="uid://level1001"]
+
+[ext_resource type="Script" path="res://scripts/Player.gd" id="1"]
+
+[node name="Level1" type="Node2D"]
+
+[node name="TileMap" type="TileMapLayer" parent="."]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(48, 48)
+script = ExtResource("1")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+
+[node name="Collectibles" type="Node2D" parent="."]
+
+[node name="Page1" type="Area2D" parent="Collectibles"]
+position = Vector2(112, 48)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collectibles/Page1"]
+
+[node name="Page2" type="Area2D" parent="Collectibles"]
+position = Vector2(176, 48)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collectibles/Page2"]
+
+[node name="Page3" type="Area2D" parent="Collectibles"]
+position = Vector2(112, 112)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collectibles/Page3"]
+
+[node name="Page4" type="Area2D" parent="Collectibles"]
+position = Vector2(176, 112)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collectibles/Page4"]
+
+[node name="Page5" type="Area2D" parent="Collectibles"]
+position = Vector2(240, 112)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collectibles/Page5"]
