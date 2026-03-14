@@ -1,91 +1,73 @@
 extends CharacterBody2D
 
-const TILE_SIZE: int = 32
-const MOVE_SPEED: float = 200.0
+## Tile-based 4-directional player movement with wall collision.
 
-var target_position: Vector2
-var is_moving: bool = false
-var chomp_open: bool = true
-var chomp_timer: float = 0.0
-const CHOMP_INTERVAL: float = 0.15
+signal page_collected(page_name: String)
 
+const TILE_SIZE := 32
+const MOVE_SPEED := 120.0
+
+var current_direction := Vector2.ZERO
+var next_direction := Vector2.ZERO
+var target_position := Vector2.ZERO
+var is_moving := false
+
+@onready var ray: RayCast2D = $RayCast2D
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var collision: CollisionShape2D = $CollisionShape2D
+
 
 func _ready() -> void:
 	target_position = position
-	position = snapped_to_grid(position)
-	target_position = position
 
-func snapped_to_grid(pos: Vector2) -> Vector2:
-	return Vector2(
-		snapped(pos.x, TILE_SIZE) + TILE_SIZE / 2,
-		snapped(pos.y, TILE_SIZE) + TILE_SIZE / 2
-	)
+
+func _process(_delta: float) -> void:
+	_read_input()
+
 
 func _physics_process(delta: float) -> void:
 	if is_moving:
-		_do_move(delta)
+		_move_toward_target(delta)
 	else:
-		_check_input()
-	_animate_chomp(delta)
+		_try_turn()
 
-func _check_input() -> void:
-	var direction := Vector2.ZERO
+
+func _read_input() -> void:
 	if Input.is_action_pressed("move_up"):
-		direction = Vector2.UP
+		next_direction = Vector2.UP
 	elif Input.is_action_pressed("move_down"):
-		direction = Vector2.DOWN
+		next_direction = Vector2.DOWN
 	elif Input.is_action_pressed("move_left"):
-		direction = Vector2.LEFT
+		next_direction = Vector2.LEFT
 	elif Input.is_action_pressed("move_right"):
-		direction = Vector2.RIGHT
+		next_direction = Vector2.RIGHT
 
-	if direction != Vector2.ZERO:
-		var next_pos := position + direction * TILE_SIZE
-		if not _is_wall(next_pos):
-			target_position = next_pos
-			is_moving = true
-			_face_direction(direction)
 
-func _is_wall(pos: Vector2) -> bool:
-	var space_state := get_world_2d().direct_space_state
-	var params := PhysicsPointQueryParameters2D.new()
-	params.position = pos
-	params.collision_mask = 1
-	var result := space_state.intersect_point(params, 1)
-	return result.size() > 0
+func _try_turn() -> void:
+	# Try queued direction first
+	if next_direction != Vector2.ZERO and _can_move(next_direction):
+		current_direction = next_direction
+		next_direction = Vector2.ZERO
+		_start_move()
+	elif current_direction != Vector2.ZERO and _can_move(current_direction):
+		_start_move()
 
-func _do_move(delta: float) -> void:
-	var move_vec := (target_position - position)
-	if move_vec.length() < 2.0:
+
+func _can_move(direction: Vector2) -> bool:
+	ray.target_position = direction * TILE_SIZE
+	ray.force_raycast_update()
+	return not ray.is_colliding()
+
+
+func _start_move() -> void:
+	target_position = position + current_direction * TILE_SIZE
+	is_moving = true
+
+
+func _move_toward_target(delta: float) -> void:
+	var move_vec := (target_position - position).normalized()
+	position += move_vec * MOVE_SPEED * delta
+
+	if position.distance_to(target_position) < 2.0:
 		position = target_position
 		is_moving = false
-	else:
-		var step := move_vec.normalized() * MOVE_SPEED * delta
-		if step.length() > move_vec.length():
-			position = target_position
-			is_moving = false
-		else:
-			position += step
-
-func _face_direction(dir: Vector2) -> void:
-	if sprite == null:
-		return
-	if dir == Vector2.LEFT:
-		sprite.rotation_degrees = 180
-	elif dir == Vector2.RIGHT:
-		sprite.rotation_degrees = 0
-	elif dir == Vector2.UP:
-		sprite.rotation_degrees = 270
-	elif dir == Vector2.DOWN:
-		sprite.rotation_degrees = 90
-
-func _animate_chomp(delta: float) -> void:
-	if not is_moving:
-		return
-	chomp_timer += delta
-	if chomp_timer >= CHOMP_INTERVAL:
-		chomp_timer = 0.0
-		chomp_open = not chomp_open
-		if sprite != null:
-			sprite.frame = 0 if chomp_open else 1
