@@ -17,6 +17,7 @@ var is_alive: bool = true
 
 
 func _ready() -> void:
+	add_to_group("player")
 	target_position = position
 	collision_layer = 2
 	collision_mask = 1

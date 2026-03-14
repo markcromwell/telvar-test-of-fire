@@ -2,7 +2,6 @@ extends Area2D
 
 var _collected: bool = false
 
-@onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 
