@@ -1,8 +1,6 @@
 extends StaticBody2D
 
 ## Blocks movement until the key page is collected.
-## Listens for GameManager.page_collected and disables collision
-## when the matching page_name is received.
 
 @export var required_page: String = "Sit pruina liquefaciet"
 

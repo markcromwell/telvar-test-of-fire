@@ -1,73 +1,60 @@
 extends CanvasLayer
-## HUD overlay — score, lives, spell meter, lore popups, and ending sequence.
 
-@onready var score_label: Label = $ScoreLabel if has_node("ScoreLabel") else null
-@onready var lives_label: Label = $LivesLabel if has_node("LivesLabel") else null
-@onready var timer_label: Label = $TimerLabel if has_node("TimerLabel") else null
-@onready var lore_panel: Panel = $LorePanel if has_node("LorePanel") else null
-@onready var lore_text: RichTextLabel = $LorePanel/LoreText if has_node("LorePanel/LoreText") else null
-@onready var ending_panel: Panel = $EndingPanel if has_node("EndingPanel") else null
+signal lore_dismissed
 
-const LORE_QUOTES := {
-	4: "The Lens Complex hums with ancient energy. Telvar feels the weight of Fenrir's hounds watching from the shadows, and the elemental forces bound within these crystalline walls resist all who dare trespass.",
-	5: "Deep within the Vaults, the air grows thick. Every corridor narrows, every shadow breathes. The hounds are closer now — Telvar can hear their breath echoing off cold stone.",
-	6: "",  # Level 6 uses ending sequence instead
-}
+@onready var score_label: Label = $HUD/ScoreLabel
+@onready var lives_label: Label = $HUD/LivesLabel
+@onready var level_label: Label = $HUD/LevelLabel
+@onready var lore_panel: PanelContainer = $LorePopup
+@onready var lore_text: Label = $LorePopup/MarginContainer/LoreText
+@onready var rank_up_label: Label = $RankUpLabel
 
 
 func _ready() -> void:
 	GameManager.score_changed.connect(_on_score_changed)
 	GameManager.lives_changed.connect(_on_lives_changed)
-	GameManager.level_completed.connect(_on_level_completed)
-	GameManager.game_over.connect(_on_game_over)
-	if lore_panel:
-		lore_panel.visible = false
-	if ending_panel:
-		ending_panel.visible = false
-
-
-func _process(_delta: float) -> void:
-	if timer_label:
-		var t := int(GameManager.level_timer)
-		timer_label.text = "%d:%02d" % [t / 60, t % 60]
+	lore_panel.visible = false
+	if rank_up_label:
+		rank_up_label.visible = false
 
 
 func _on_score_changed(new_score: int) -> void:
-	if score_label:
-		score_label.text = "Score: %d" % new_score
+	score_label.text = "Score: %d" % new_score
 
 
 func _on_lives_changed(new_lives: int) -> void:
-	if lives_label:
-		lives_label.text = "Lives: %d" % new_lives
+	lives_label.text = "Lives: %d" % new_lives
 
 
-func _on_level_completed(level_index: int) -> void:
-	if level_index == 6:
-		_show_ending_sequence()
-	else:
-		_show_lore_popup(level_index)
+func set_level_name(level_name: String) -> void:
+	level_label.text = level_name
 
 
-func _show_lore_popup(level_index: int) -> void:
-	if lore_panel and lore_text:
-		var quote: String = LORE_QUOTES.get(level_index, "")
-		if quote != "":
-			lore_text.text = quote
-			lore_panel.visible = true
+func show_lore(text: String) -> void:
+	lore_text.text = text
+	lore_panel.visible = true
+	await get_tree().create_timer(0.5).timeout
+	set_process_input(true)
 
 
-func _show_ending_sequence() -> void:
-	## True ending: Telvar banished to Antica with Myramar. Pre-order CTA.
-	if ending_panel:
-		ending_panel.visible = true
-	GameManager.save_high_score()
-
-
-func _on_game_over() -> void:
-	GameManager.save_high_score()
-
-
-func dismiss_lore() -> void:
-	if lore_panel:
+func _input(event: InputEvent) -> void:
+	if lore_panel.visible and event.is_pressed():
 		lore_panel.visible = false
+		set_process_input(false)
+		lore_dismissed.emit()
+
+
+func play_rank_up_animation(gem_node: Node2D, subtitle: String) -> void:
+	if rank_up_label:
+		rank_up_label.text = subtitle
+		rank_up_label.visible = true
+
+	if gem_node:
+		var tween := gem_node.create_tween()
+		tween.tween_property(gem_node, "scale", Vector2(1.3, 1.3), 0.25)
+		tween.tween_property(gem_node, "scale", Vector2(1.0, 1.0), 0.25)
+		await tween.finished
+
+	if rank_up_label:
+		await get_tree().create_timer(1.0).timeout
+		rank_up_label.visible = false

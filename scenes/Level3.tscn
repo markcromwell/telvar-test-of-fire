@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://b0level3"]
+[gd_scene load_steps=13 format=3 uid="uid://b0level3"]
 
 [ext_resource type="Script" path="res://scripts/LevelManager.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/Player.gd" id="2"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://scripts/SpellMeter.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/Undead.gd" id="7"]
 [ext_resource type="Script" path="res://scripts/LockedDoor.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/SphereOfDarkness.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/BonusItem.gd" id="10"]
 
 [sub_resource type="RectangleShape2D" id="player_col"]
 size = Vector2(28, 28)
@@ -20,6 +22,9 @@ size = Vector2(20, 20)
 
 [sub_resource type="RectangleShape2D" id="door_col"]
 size = Vector2(32, 64)
+
+[sub_resource type="RectangleShape2D" id="sphere_col"]
+size = Vector2(24, 24)
 
 [node name="Level3" type="Node2D"]
 script = ExtResource("1")
@@ -35,7 +40,7 @@ color = Color(0.15, 0.1, 0.05, 1)
 
 [node name="Walls" type="TileMapLayer" parent="."]
 
-[node name="Player" type="CharacterBody2D" parent="."]
+[node name="Player" type="CharacterBody2D" parent="." groups=["player"]]
 position = Vector2(64, 64)
 collision_layer = 2
 collision_mask = 5
@@ -125,61 +130,199 @@ collision_mask = 1
 
 [node name="SpellPages" type="Node2D" parent="."]
 
-[node name="Page1" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(192, 192)
+[node name="BindingSpell" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(128, 192)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4")
-page_name = "Terra Fortis"
+page_name = "Binding Spell"
+page_index = 0
 
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page1"]
-modulate = Color(1, 1, 0.5, 1)
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/BindingSpell"]
+modulate = Color(1, 0.84, 0, 1)
 scale = Vector2(0.8, 0.8)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page1"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/BindingSpell"]
 shape = SubResource("page_col")
 
-[node name="Page2" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(384, 128)
+[node name="IscandiousGambit" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(256, 128)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4")
-page_name = "Aqua Purifica"
+page_name = "Iscandious Gambit"
+page_index = 1
 
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page2"]
-modulate = Color(1, 1, 0.5, 1)
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/IscandiousGambit"]
+modulate = Color(0.2, 0.8, 0.2, 1)
 scale = Vector2(0.8, 0.8)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page2"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/IscandiousGambit"]
 shape = SubResource("page_col")
 
-[node name="KeyPage" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+[node name="WardingPrayer" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(384, 256)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Warding Prayer"
+page_index = 3
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/WardingPrayer"]
+modulate = Color(0.3, 0.5, 1, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/WardingPrayer"]
+shape = SubResource("page_col")
+
+[node name="Transmutation" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(512, 384)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Transmutation"
+page_index = 4
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Transmutation"]
+modulate = Color(0.6, 0.2, 0.8, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Transmutation"]
+shape = SubResource("page_col")
+
+[node name="SitPruina" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
 position = Vector2(256, 480)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4")
 page_name = "Sit pruina liquefaciet"
 is_key_page = true
+page_index = 5
 
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/KeyPage"]
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/SitPruina"]
 modulate = Color(0.5, 1, 0.5, 1)
 scale = Vector2(1, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/KeyPage"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/SitPruina"]
 shape = SubResource("page_col")
 
-[node name="Page4" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
-position = Vector2(960, 256)
+[node name="ShadowflameRitual" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(768, 192)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Shadowflame Ritual"
+page_index = 6
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/ShadowflameRitual"]
+modulate = Color(0.8, 0.3, 0.1, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/ShadowflameRitual"]
+shape = SubResource("page_col")
+
+[node name="AetherInvocation" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(896, 320)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Aether Invocation"
+page_index = 7
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/AetherInvocation"]
+modulate = Color(0.5, 0.8, 1, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/AetherInvocation"]
+shape = SubResource("page_col")
+
+[node name="ArcanumVitae" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(192, 384)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Arcanum Vitae"
+page_index = 8
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/ArcanumVitae"]
+modulate = Color(1, 1, 0.5, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/ArcanumVitae"]
+shape = SubResource("page_col")
+
+[node name="LuxAeterna" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(960, 480)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Lux Aeterna"
+page_index = 9
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/LuxAeterna"]
+modulate = Color(1, 1, 0.7, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/LuxAeterna"]
+shape = SubResource("page_col")
+
+[node name="IgnisProtego" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(1024, 192)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Ignis Protego"
+page_index = 10
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/IgnisProtego"]
+modulate = Color(1, 0.5, 0.2, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/IgnisProtego"]
+shape = SubResource("page_col")
+
+[node name="NoxUmbra" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(1088, 448)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4")
 page_name = "Nox Umbra"
+page_index = 11
 
-[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Page4"]
-modulate = Color(1, 1, 0.5, 1)
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/NoxUmbra"]
+modulate = Color(0.4, 0.2, 0.6, 1)
 scale = Vector2(0.8, 0.8)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Page4"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/NoxUmbra"]
+shape = SubResource("page_col")
+
+[node name="SphereOfDarkness" type="Area2D" parent="."]
+position = Vector2(640, 544)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("9")
+
+[node name="Sprite2D" type="Sprite2D" parent="SphereOfDarkness"]
+modulate = Color(0.1, 0.05, 0.15, 1)
+scale = Vector2(1.2, 1.2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SphereOfDarkness"]
+shape = SubResource("sphere_col")
+
+[node name="BonusItems" type="Node2D" parent="."]
+
+[node name="CoroniumShard" type="Area2D" parent="BonusItems"]
+position = Vector2(832, 256)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("10")
+bonus_type = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="BonusItems/CoroniumShard"]
+modulate = Color(0.3, 0.9, 1, 1)
+scale = Vector2(0.7, 0.7)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BonusItems/CoroniumShard"]
 shape = SubResource("page_col")
 
 [node name="RankGem" type="Sprite2D" parent="."]
