@@ -1,0 +1,410 @@
+[gd_scene load_steps=13 format=3 uid="uid://b0level3"]
+
+[ext_resource type="Script" path="res://scripts/LevelManager.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/Player.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/Ghost.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/SpellPage.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/UI.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/SpellMeter.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/Undead.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/LockedDoor.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/SphereOfDarkness.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/BonusItem.gd" id="10"]
+
+[sub_resource type="RectangleShape2D" id="player_col"]
+size = Vector2(28, 28)
+
+[sub_resource type="RectangleShape2D" id="ghost_col"]
+size = Vector2(28, 28)
+
+[sub_resource type="RectangleShape2D" id="page_col"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="door_col"]
+size = Vector2(32, 64)
+
+[sub_resource type="RectangleShape2D" id="sphere_col"]
+size = Vector2(24, 24)
+
+[node name="Level3" type="Node2D"]
+script = ExtResource("1")
+level_index = 3
+level_display_name = "Magic Library"
+lore_text = "Theragaard hunted the last rogue archmagus. No one has matched him since."
+next_level_scene = ""
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.15, 0.1, 0.05, 1)
+
+[node name="Walls" type="TileMapLayer" parent="."]
+
+[node name="Player" type="CharacterBody2D" parent="." groups=["player"]]
+position = Vector2(64, 64)
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("2")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+modulate = Color(0.2, 0.6, 1, 1)
+scale = Vector2(2, 2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+shape = SubResource("player_col")
+
+[node name="RayCast2D" type="RayCast2D" parent="Player"]
+target_position = Vector2(32, 0)
+collision_mask = 5
+
+[node name="LockedDoor" type="StaticBody2D" parent="."]
+position = Vector2(640, 352)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("8")
+required_page = "Sit pruina liquefaciet"
+
+[node name="Sprite2D" type="Sprite2D" parent="LockedDoor"]
+modulate = Color(0.5, 0.3, 0.1, 1)
+scale = Vector2(2, 4)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LockedDoor"]
+shape = SubResource("door_col")
+
+[node name="AemonGuardian" type="CharacterBody2D" parent="." groups=["ghosts"]]
+position = Vector2(608, 320)
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("3")
+behavior = 0
+base_speed = 85.0
+
+[node name="Sprite2D" type="Sprite2D" parent="AemonGuardian"]
+modulate = Color(1, 0, 0, 1)
+scale = Vector2(2, 2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AemonGuardian"]
+shape = SubResource("ghost_col")
+
+[node name="RayCast2D" type="RayCast2D" parent="AemonGuardian"]
+target_position = Vector2(32, 0)
+collision_mask = 1
+
+[node name="AbyssalCreature" type="CharacterBody2D" parent="." groups=["ghosts"]]
+position = Vector2(672, 360)
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("3")
+behavior = 1
+base_speed = 75.0
+
+[node name="Sprite2D" type="Sprite2D" parent="AbyssalCreature"]
+modulate = Color(1, 0.4, 0.7, 1)
+scale = Vector2(2, 2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AbyssalCreature"]
+shape = SubResource("ghost_col")
+
+[node name="RayCast2D" type="RayCast2D" parent="AbyssalCreature"]
+target_position = Vector2(32, 0)
+collision_mask = 1
+
+[node name="UndeadGhost" type="CharacterBody2D" parent="." groups=["ghosts"]]
+position = Vector2(640, 480)
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("7")
+behavior = 3
+base_speed = 50.0
+
+[node name="Sprite2D" type="Sprite2D" parent="UndeadGhost"]
+modulate = Color(0.3, 0.8, 0.3, 1)
+scale = Vector2(2, 2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="UndeadGhost"]
+shape = SubResource("ghost_col")
+
+[node name="RayCast2D" type="RayCast2D" parent="UndeadGhost"]
+target_position = Vector2(32, 0)
+collision_mask = 1
+
+[node name="SpellPages" type="Node2D" parent="."]
+
+[node name="BindingSpell" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(128, 192)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Binding Spell"
+page_index = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/BindingSpell"]
+modulate = Color(1, 0.84, 0, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/BindingSpell"]
+shape = SubResource("page_col")
+
+[node name="IscandiousGambit" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(256, 128)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Iscandious Gambit"
+page_index = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/IscandiousGambit"]
+modulate = Color(0.2, 0.8, 0.2, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/IscandiousGambit"]
+shape = SubResource("page_col")
+
+[node name="WardingPrayer" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(384, 256)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Warding Prayer"
+page_index = 3
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/WardingPrayer"]
+modulate = Color(0.3, 0.5, 1, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/WardingPrayer"]
+shape = SubResource("page_col")
+
+[node name="Transmutation" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(512, 384)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Transmutation"
+page_index = 4
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/Transmutation"]
+modulate = Color(0.6, 0.2, 0.8, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/Transmutation"]
+shape = SubResource("page_col")
+
+[node name="SitPruina" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(256, 480)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Sit pruina liquefaciet"
+is_key_page = true
+page_index = 5
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/SitPruina"]
+modulate = Color(0.5, 1, 0.5, 1)
+scale = Vector2(1, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/SitPruina"]
+shape = SubResource("page_col")
+
+[node name="ShadowflameRitual" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(768, 192)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Shadowflame Ritual"
+page_index = 6
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/ShadowflameRitual"]
+modulate = Color(0.8, 0.3, 0.1, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/ShadowflameRitual"]
+shape = SubResource("page_col")
+
+[node name="AetherInvocation" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(896, 320)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Aether Invocation"
+page_index = 7
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/AetherInvocation"]
+modulate = Color(0.5, 0.8, 1, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/AetherInvocation"]
+shape = SubResource("page_col")
+
+[node name="ArcanumVitae" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(192, 384)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Arcanum Vitae"
+page_index = 8
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/ArcanumVitae"]
+modulate = Color(1, 1, 0.5, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/ArcanumVitae"]
+shape = SubResource("page_col")
+
+[node name="LuxAeterna" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(960, 480)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Lux Aeterna"
+page_index = 9
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/LuxAeterna"]
+modulate = Color(1, 1, 0.7, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/LuxAeterna"]
+shape = SubResource("page_col")
+
+[node name="IgnisProtego" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(1024, 192)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Ignis Protego"
+page_index = 10
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/IgnisProtego"]
+modulate = Color(1, 0.5, 0.2, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/IgnisProtego"]
+shape = SubResource("page_col")
+
+[node name="NoxUmbra" type="Area2D" parent="SpellPages" groups=["spell_pages"]]
+position = Vector2(1088, 448)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4")
+page_name = "Nox Umbra"
+page_index = 11
+
+[node name="Sprite2D" type="Sprite2D" parent="SpellPages/NoxUmbra"]
+modulate = Color(0.4, 0.2, 0.6, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SpellPages/NoxUmbra"]
+shape = SubResource("page_col")
+
+[node name="SphereOfDarkness" type="Area2D" parent="."]
+position = Vector2(640, 544)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("9")
+
+[node name="Sprite2D" type="Sprite2D" parent="SphereOfDarkness"]
+modulate = Color(0.1, 0.05, 0.15, 1)
+scale = Vector2(1.2, 1.2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SphereOfDarkness"]
+shape = SubResource("sphere_col")
+
+[node name="BonusItems" type="Node2D" parent="."]
+
+[node name="CoroniumShard" type="Area2D" parent="BonusItems"]
+position = Vector2(832, 256)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("10")
+bonus_type = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="BonusItems/CoroniumShard"]
+modulate = Color(0.3, 0.9, 1, 1)
+scale = Vector2(0.7, 0.7)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BonusItems/CoroniumShard"]
+shape = SubResource("page_col")
+
+[node name="RankGem" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+modulate = Color(0.2, 0.6, 0.2, 1)
+scale = Vector2(2, 2)
+visible = false
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("5")
+
+[node name="HUD" type="HBoxContainer" parent="UI"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 600.0
+offset_bottom = 40.0
+
+[node name="ScoreLabel" type="Label" parent="UI/HUD"]
+text = "Score: 0"
+
+[node name="HSeparator" type="HSeparator" parent="UI/HUD"]
+custom_minimum_size = Vector2(20, 0)
+
+[node name="LivesLabel" type="Label" parent="UI/HUD"]
+text = "Lives: 3"
+
+[node name="HSeparator2" type="HSeparator" parent="UI/HUD"]
+custom_minimum_size = Vector2(20, 0)
+
+[node name="LevelLabel" type="Label" parent="UI/HUD"]
+text = "Magic Library"
+
+[node name="SpellMeter" type="Control" parent="UI"]
+offset_left = 900.0
+offset_top = 10.0
+offset_right = 1270.0
+offset_bottom = 50.0
+script = ExtResource("6")
+
+[node name="ProgressBar" type="ProgressBar" parent="UI/SpellMeter"]
+offset_right = 370.0
+offset_bottom = 20.0
+
+[node name="Label" type="Label" parent="UI/SpellMeter"]
+offset_top = 22.0
+offset_right = 370.0
+offset_bottom = 40.0
+text = "Spell Meter: 0%"
+horizontal_alignment = 1
+
+[node name="LorePopup" type="PanelContainer" parent="UI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -80.0
+offset_right = 250.0
+offset_bottom = 80.0
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/LorePopup"]
+layout_mode = 2
+
+[node name="LoreText" type="Label" parent="UI/LorePopup/MarginContainer"]
+layout_mode = 2
+text = "Lore text here"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="RankUpLabel" type="Label" parent="UI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = -60.0
+text = "Rank Up!"
+horizontal_alignment = 1
