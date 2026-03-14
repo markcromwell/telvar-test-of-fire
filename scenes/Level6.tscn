@@ -1,0 +1,68 @@
+[gd_scene format=3 uid="uid://level6001"]
+
+[node name="Level6" type="Node2D"]
+script = ExtResource("res://scripts/Level6.gd")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(640, 400)
+script = ExtResource("res://scripts/Player.gd")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+
+[node name="SpellPages" type="Node2D" parent="."]
+
+[node name="Collectibles" type="Node2D" parent="."]
+
+[node name="SphereOfDarkness1" type="Area2D" parent="Collectibles"]
+position = Vector2(256, 360)
+
+[node name="SphereOfDarkness2" type="Area2D" parent="Collectibles"]
+position = Vector2(1024, 360)
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("res://scripts/UI.gd")
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 8.0
+offset_right = 200.0
+offset_bottom = 32.0
+text = "Score: 0"
+
+[node name="LivesLabel" type="Label" parent="UI"]
+offset_left = 220.0
+offset_top = 8.0
+offset_right = 400.0
+offset_bottom = 32.0
+text = "Lives: 3"
+
+[node name="TimerLabel" type="Label" parent="UI"]
+offset_left = 1100.0
+offset_top = 8.0
+offset_right = 1264.0
+offset_bottom = 32.0
+text = "0:00"
+
+[node name="EndingPanel" type="Panel" parent="UI"]
+visible = false
+offset_left = 140.0
+offset_top = 100.0
+offset_right = 1140.0
+offset_bottom = 620.0
+
+[node name="EndingText" type="RichTextLabel" parent="UI/EndingPanel"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 984.0
+offset_bottom = 504.0
+text = "The Grand Hall falls silent. Telvar stands victorious — but the victory is hollow. The ancient magic surges, and Telvar is banished to Antica alongside Myramar. Their fates are now intertwined.
+
+The story continues in the Medias novel series.
+
+Pre-order now to discover what awaits in Antica."
+
+[node name="MyramarTaunt" type="AudioStreamPlayer" parent="."]

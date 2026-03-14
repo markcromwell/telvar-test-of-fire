@@ -1,14 +1,29 @@
 extends Node
+## Singleton — manages SFX and music playback.
 
-# Stub audio manager — audio assets not yet provided.
+var _players := {}
 
-func play_sfx(_name: String) -> void:
+
+func _ready() -> void:
 	pass
 
 
-func play_music(_name: String) -> void:
+func play_sfx(sfx_name: String) -> void:
+	# Stub — plays named sound effect when audio assets are added
+	if _players.has(sfx_name):
+		_players[sfx_name].play()
+
+
+func play_music(track_name: String) -> void:
+	# Stub — plays background music track
 	pass
 
 
 func stop_music() -> void:
+	pass
+
+
+func play_myramar_death_taunt() -> void:
+	## Level 6 death taunt — AudioStreamPlayer stub
+	# Will play Myramar's taunt audio when asset is provided
 	pass
