@@ -128,6 +128,15 @@ check("AudioManager: play_level_start()",  "func play_level_start(" in am)
 check("AudioManager: play_banish_mode()",  "func play_banish_mode()" in am)
 check("AudioManager: play_death_taunt()",  "func play_death_taunt()" in am)
 
+
+# -- Phase 5 fixes: HUD.tscn SpellMeterControl script --------------------------
+hud = open("scenes/HUD.tscn", encoding="utf-8").read() if os.path.isfile("scenes/HUD.tscn") else ""
+check("HUD.tscn: SpellMeter.gd ext_resource declared",   "SpellMeter.gd" in hud)
+check("HUD.tscn: SpellMeterControl uses 3_spellmeter",   'ExtResource("3_spellmeter")' in hud)
+check("HUD.tscn: no null script expression",
+      'get_path().replace("UI.gd", "SpellMeter.gd")' not in hud)
+check("HUD.tscn: load_steps=4",                          "load_steps=4" in hud)
+
 # ── Report ───────────────────────────────────────────────────────────────────
 total = len(PASS) + len(FAIL)
 print(f"\nTelvar Validator — {len(PASS)} pass, {len(FAIL)} fail, {total} checks")
