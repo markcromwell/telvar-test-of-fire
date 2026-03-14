@@ -1,11 +1,12 @@
 extends Control
-## HUD element showing spell meter fill state.
+## SpellMeter UI — displays current spell meter fill level.
 
-@onready var progress_bar: ProgressBar = $ProgressBar if has_node("ProgressBar") else null
+@onready var progress_bar := $ProgressBar
 
 
 func _ready() -> void:
 	GameManager.spell_meter_changed.connect(_on_meter_changed)
+	_on_meter_changed(GameManager.spell_meter)
 
 
 func _on_meter_changed(value: float) -> void:
