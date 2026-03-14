@@ -49,6 +49,7 @@ func _read_input() -> void:
 		input_dir = Vector2.RIGHT
 	if input_dir != Vector2.ZERO:
 		queued_direction = input_dir
+		print("INPUT: ", input_dir, " pos=", position, " moving=", is_moving)
 
 
 func _try_move() -> void:
@@ -57,9 +58,13 @@ func _try_move() -> void:
 		queued_direction = Vector2.ZERO
 		target_position = position + current_direction * TILE_SIZE
 		is_moving = true
+		print("MOVE: dir=", current_direction, " target=", target_position)
 	elif current_direction != Vector2.ZERO and _can_move(current_direction):
 		target_position = position + current_direction * TILE_SIZE
 		is_moving = true
+	else:
+		if queued_direction != Vector2.ZERO:
+			print("BLOCKED: ", queued_direction, " at ", position)
 
 
 func _move_toward_target(delta: float) -> void:
