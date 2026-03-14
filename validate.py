@@ -150,6 +150,11 @@ for lvl in [2, 3, 4, 5, 6]:
     check(f"Level{lvl}.tscn: no bare SphereOfDarkness Area2D without script",
           not ('name="SphereOfDarkness" type="Area2D"' in lx and 'SphereOfDarkness.gd' not in lx))
 
+
+# -- Phase 7: orphan deletion ---------------------------------------------------
+check("MainMenu.gd deleted",    not os.path.isfile("scripts/MainMenu.gd"))
+check("LevelManager.gd deleted", not os.path.isfile("scripts/LevelManager.gd"))
+
 # ── Report ───────────────────────────────────────────────────────────────────
 total = len(PASS) + len(FAIL)
 print(f"\nTelvar Validator — {len(PASS)} pass, {len(FAIL)} fail, {total} checks")
