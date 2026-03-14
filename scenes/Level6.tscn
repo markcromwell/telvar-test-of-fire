@@ -1,0 +1,232 @@
+[gd_scene format=3 uid="uid://level6001"]
+
+[node name="Level6" type="Node2D"]
+script = ExtResource("res://scripts/Level6.gd")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(640, 400)
+script = ExtResource("res://scripts/Player.gd")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+
+[node name="SpellPages" type="Node2D" parent="."]
+
+[node name="Collectibles" type="Node2D" parent="."]
+
+[node name="SphereOfDarkness1" type="Area2D" parent="Collectibles"]
+position = Vector2(256, 360)
+
+[node name="SphereOfDarkness2" type="Area2D" parent="Collectibles"]
+position = Vector2(1024, 360)
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("res://scripts/UI.gd")
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 8.0
+offset_right = 200.0
+offset_bottom = 32.0
+text = "Score: 0"
+
+[node name="LivesLabel" type="Label" parent="UI"]
+offset_left = 220.0
+offset_top = 8.0
+offset_right = 400.0
+offset_bottom = 32.0
+text = "Lives: 3"
+
+[node name="TimerLabel" type="Label" parent="UI"]
+offset_left = 1100.0
+offset_top = 8.0
+offset_right = 1264.0
+offset_bottom = 32.0
+text = "0:00"
+
+[node name="EndingPanel" type="Panel" parent="UI"]
+visible = false
+offset_left = 140.0
+offset_top = 100.0
+offset_right = 1140.0
+offset_bottom = 620.0
+
+[node name="EndingText" type="RichTextLabel" parent="UI/EndingPanel"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 984.0
+offset_bottom = 504.0
+text = "The Grand Hall falls silent. Telvar stands victorious — but the victory is hollow. The ancient magic surges, and Telvar is banished to Antica alongside Myramar. Their fates are now intertwined.
+
+The story continues in the Medias novel series.
+
+Pre-order now to discover what awaits in Antica."
+
+[node name="SubtitleLayer" type="CanvasLayer" parent="UI"]
+layer = 10
+
+[node name="SubtitleLabel" type="RichTextLabel" parent="UI/SubtitleLayer"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -80.0
+offset_right = 400.0
+offset_bottom = -16.0
+text = ""
+visible = false
+fit_content = true
+scroll_active = false
+
+[node name="RankGem" type="ColorRect" parent="UI"]
+offset_left = 590.0
+offset_top = 4.0
+offset_right = 690.0
+offset_bottom = 36.0
+color = Color(0.6, 0.2, 0.8, 1)
+
+[node name="CanvasModulate" type="CanvasModulate" parent="UI"]
+
+[node name="CouncilPanel" type="Panel" parent="UI"]
+visible = false
+offset_left = 190.0
+offset_top = 140.0
+offset_right = 1090.0
+offset_bottom = 580.0
+
+[node name="CouncilTitle" type="Label" parent="UI/CouncilPanel"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 884.0
+offset_bottom = 50.0
+text = "The Council's Decree"
+horizontal_alignment = 1
+
+[node name="CouncilText" type="RichTextLabel" parent="UI/CouncilPanel"]
+offset_left = 32.0
+offset_top = 60.0
+offset_right = 868.0
+offset_bottom = 420.0
+text = "The Council of Mages convenes in silence. The Binding Spell is cast — a flash of blinding light erupts across the Grand Hall. The ancient magic tears through reality itself. Telvar has succeeded... but at a terrible cost. He is pulled through the rift alongside Myramar, banished to the forgotten realm of Antica. Their fates are now intertwined, bound by the very spell meant to save them all."
+
+[node name="FadeRect" type="ColorRect" parent="UI"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0, 0, 0, 1)
+
+[node name="FinalScreen" type="Panel" parent="UI"]
+visible = false
+offset_left = 190.0
+offset_top = 80.0
+offset_right = 1090.0
+offset_bottom = 640.0
+
+[node name="TeaserLabel" type="Label" parent="UI/FinalScreen"]
+offset_left = 16.0
+offset_top = 20.0
+offset_right = 884.0
+offset_bottom = 70.0
+text = "Telvar's journey continues in Volume 4 of the Medias series..."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="TeaserBody" type="RichTextLabel" parent="UI/FinalScreen"]
+offset_left = 32.0
+offset_top = 80.0
+offset_right = 868.0
+offset_bottom = 220.0
+text = "Banished to the forgotten realm of Antica, Telvar must forge an unlikely alliance with Myramar to survive. Ancient forces stir in the shadows, and the path home demands sacrifices neither of them expected.
+
+Pre-order now to discover what awaits beyond the rift."
+
+[node name="ScoreLabel" type="Label" parent="UI/FinalScreen"]
+offset_left = 200.0
+offset_top = 240.0
+offset_right = 700.0
+offset_bottom = 270.0
+text = "Your Score: 0"
+horizontal_alignment = 1
+
+[node name="HighScoreLabel" type="Label" parent="UI/FinalScreen"]
+offset_left = 200.0
+offset_top = 280.0
+offset_right = 700.0
+offset_bottom = 310.0
+text = "High Score: 0"
+horizontal_alignment = 1
+
+[node name="PreOrderButton" type="Button" parent="UI/FinalScreen"]
+offset_left = 300.0
+offset_top = 340.0
+offset_right = 600.0
+offset_bottom = 385.0
+text = "Pre-Order Volume 4"
+
+[node name="ShareScoreButton" type="Button" parent="UI/FinalScreen"]
+offset_left = 300.0
+offset_top = 400.0
+offset_right = 600.0
+offset_bottom = 445.0
+text = "Share Score"
+
+[node name="PlayAgainButton" type="Button" parent="UI/FinalScreen"]
+offset_left = 300.0
+offset_top = 460.0
+offset_right = 600.0
+offset_bottom = 505.0
+text = "Play Again"
+
+[node name="GameOverPanel" type="Panel" parent="UI"]
+visible = false
+offset_left = 340.0
+offset_top = 180.0
+offset_right = 940.0
+offset_bottom = 540.0
+
+[node name="GameOverLabel" type="Label" parent="UI/GameOverPanel"]
+offset_left = 16.0
+offset_top = 30.0
+offset_right = 584.0
+offset_bottom = 80.0
+text = "The Council was right about you..."
+horizontal_alignment = 1
+
+[node name="GameOverScore" type="Label" parent="UI/GameOverPanel"]
+offset_left = 16.0
+offset_top = 100.0
+offset_right = 584.0
+offset_bottom = 130.0
+text = "Score: 0"
+horizontal_alignment = 1
+
+[node name="RestartButton" type="Button" parent="UI/GameOverPanel"]
+offset_left = 175.0
+offset_top = 170.0
+offset_right = 425.0
+offset_bottom = 215.0
+text = "Restart Level"
+
+[node name="ContinueButton" type="Button" parent="UI/GameOverPanel"]
+offset_left = 175.0
+offset_top = 230.0
+offset_right = 425.0
+offset_bottom = 275.0
+text = "Continue (1 token)"
+
+[node name="MainMenuButton" type="Button" parent="UI/GameOverPanel"]
+offset_left = 175.0
+offset_top = 290.0
+offset_right = 425.0
+offset_bottom = 335.0
+text = "Main Menu"
+
+[node name="MyramarTaunt" type="AudioStreamPlayer" parent="."]
