@@ -17,7 +17,7 @@ const TOTAL_SPELL_PAGES: int = 12
 const BANISH_DURATION: float = 8.0
 const GHOST_SCORES: Array[int] = [50, 100, 200, 400]
 const PAGE_SCORE: int = 10
-const LEVEL_COUNT: int = 6
+const LEVEL_COUNT: int = 2
 
 var nav_grid: Array = []  # Array[Array[bool]]; nav_grid[row][col] = true if walkable
 

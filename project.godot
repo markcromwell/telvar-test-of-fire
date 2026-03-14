@@ -70,4 +70,5 @@ pause={
 2d_physics/layer_4="collectibles"
 
 [rendering]
-environment/defaults/default_clear_color = Color(0.05, 0.02, 0.1, 1)
+
+environment/defaults/default_clear_color=Color(0.05, 0.02, 0.1, 1)
