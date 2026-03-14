@@ -21,6 +21,10 @@ func _ready() -> void:
 	target_position = position
 	collision_layer = 2
 	collision_mask = 1
+	if sprite and not sprite.texture:
+		var img := Image.create(20, 20, false, Image.FORMAT_RGBA8)
+		img.fill(Color(0.2, 0.8, 1.0))
+		sprite.texture = ImageTexture.create_from_image(img)
 
 
 func _physics_process(delta: float) -> void:

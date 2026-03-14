@@ -12,6 +12,10 @@ func _ready() -> void:
 	collision_layer = 8
 	collision_mask = 2
 	body_entered.connect(_on_body_entered)
+	if sprite and not sprite.texture:
+		var img := Image.create(14, 14, false, Image.FORMAT_RGBA8)
+		img.fill(Color(1.0, 0.9, 0.2))
+		sprite.texture = ImageTexture.create_from_image(img)
 	_start_glow_animation()
 
 

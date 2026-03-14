@@ -25,12 +25,34 @@ func _ready() -> void:
 		hud.quit_pressed.connect(_quit_to_title)
 
 
+func _make_pixel_texture(w: int, h: int, color: Color) -> ImageTexture:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	img.fill(color)
+	return ImageTexture.create_from_image(img)
+
+
+func _add_wall_visuals() -> void:
+	var maze_walls := get_node_or_null("MazeWalls")
+	if not maze_walls:
+		return
+	for wall in maze_walls.get_children():
+		var cshape := wall.get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if cshape and cshape.shape is RectangleShape2D:
+			var shape := cshape.shape as RectangleShape2D
+			var rect := ColorRect.new()
+			rect.size = shape.size
+			rect.position = cshape.position - shape.size / 2
+			rect.color = Color(0.25, 0.1, 0.5)
+			wall.add_child(rect)
+
+
 func _setup_level() -> void:
 	_player = get_node_or_null("Player") as CharacterBody2D
 	if _player:
 		_player.add_to_group("player")
 		_player.died.connect(_on_player_died)
 		_player_spawn = _player.position
+	_add_wall_visuals()
 	var ghost_container := get_node_or_null("Ghosts")
 	if ghost_container:
 		for child in ghost_container.get_children():

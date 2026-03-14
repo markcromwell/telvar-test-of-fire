@@ -35,7 +35,16 @@ func _ready() -> void:
 	_configure_type()
 
 
+func _ensure_sprite_texture() -> void:
+	if sprite and not sprite.texture:
+		var img := Image.create(20, 20, false, Image.FORMAT_RGBA8)
+		img.fill(Color.WHITE)
+		sprite.texture = ImageTexture.create_from_image(img)
+		sprite.scale = Vector2(1.2, 1.2)
+
+
 func _configure_type() -> void:
+	_ensure_sprite_texture()
 	match ghost_type:
 		GhostType.AEMON:
 			_speed = BASE_SPEED * 1.1
