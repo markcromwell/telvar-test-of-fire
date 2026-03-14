@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://sphere_darkness"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 10.0
+
+[node name="SphereOfDarkness" type="Area2D"]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+modulate = Color(0.5, 0, 0.8, 1)
+scale = Vector2(0.8, 0.8)
+
+[node name="Label" type="Label" parent="."]
+offset_left = -6.0
+offset_top = -8.0
+offset_right = 6.0
+offset_bottom = 8.0
+text = "S"
+horizontal_alignment = 1
+vertical_alignment = 1

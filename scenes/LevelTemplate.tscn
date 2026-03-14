@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://level_template"]
+
+[node name="LevelTemplate" type="Node2D"]
+
+[node name="MazeWalls" type="Node2D" parent="."]
+
+[node name="SpellPages" type="Node2D" parent="."]
+
+[node name="Ghosts" type="Node2D" parent="."]

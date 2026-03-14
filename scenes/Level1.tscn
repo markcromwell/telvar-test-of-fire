@@ -1,0 +1,390 @@
+[gd_scene load_steps=12 format=3 uid="uid://level1_scene"]
+
+[ext_resource type="Script" path="res://scripts/Level1.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/Player.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/Ghost.gd" id="3_ghost"]
+[ext_resource type="Script" path="res://scripts/SpellPage.gd" id="4_page"]
+[ext_resource type="Script" path="res://scripts/SphereOfDarkness.gd" id="5_sphere"]
+[ext_resource type="PackedScene" uid="uid://hud_scene" path="res://scenes/HUD.tscn" id="6_hud"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_top"]
+size = Vector2(672, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_side"]
+size = Vector2(12, 744)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(20, 20)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_page"]
+radius = 8.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_sphere"]
+radius = 10.0
+
+[node name="Level1" type="Node2D"]
+script = ExtResource("1_level")
+
+[node name="MazeWalls" type="Node2D" parent="."]
+
+[node name="TopWall" type="StaticBody2D" parent="MazeWalls"]
+position = Vector2(336, 0)
+collision_layer = 1
+
+[node name="TopWallShape" type="CollisionShape2D" parent="MazeWalls/TopWall"]
+shape = SubResource("RectangleShape2D_top")
+
+[node name="BottomWall" type="StaticBody2D" parent="MazeWalls"]
+position = Vector2(336, 744)
+collision_layer = 1
+
+[node name="BottomWallShape" type="CollisionShape2D" parent="MazeWalls/BottomWall"]
+shape = SubResource("RectangleShape2D_top")
+
+[node name="LeftWall" type="StaticBody2D" parent="MazeWalls"]
+position = Vector2(0, 372)
+collision_layer = 1
+
+[node name="LeftWallShape" type="CollisionShape2D" parent="MazeWalls/LeftWall"]
+shape = SubResource("RectangleShape2D_side")
+
+[node name="RightWall" type="StaticBody2D" parent="MazeWalls"]
+position = Vector2(672, 372)
+collision_layer = 1
+
+[node name="RightWallShape" type="CollisionShape2D" parent="MazeWalls/RightWall"]
+shape = SubResource("RectangleShape2D_side")
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(336, 564)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("2_player")
+
+[node name="PlayerShape" type="CollisionShape2D" parent="Player"]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="PlayerSprite" type="Sprite2D" parent="Player"]
+modulate = Color(1, 0.8, 0, 1)
+scale = Vector2(0.7, 0.7)
+
+[node name="PlayerLabel" type="Label" parent="Player"]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "T"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.8, 0, 1)
+
+[node name="Ghosts" type="Node2D" parent="."]
+
+[node name="AemonGuardian" type="CharacterBody2D" parent="Ghosts"]
+position = Vector2(312, 276)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_ghost")
+ghost_type = 0
+
+[node name="AemonShape" type="CollisionShape2D" parent="Ghosts/AemonGuardian"]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="AemonLabel" type="Label" parent="Ghosts/AemonGuardian"]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "A"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+
+[node name="AbyssalCreature" type="CharacterBody2D" parent="Ghosts"]
+position = Vector2(360, 276)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_ghost")
+ghost_type = 1
+
+[node name="AbyssalShape" type="CollisionShape2D" parent="Ghosts/AbyssalCreature"]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="AbyssalLabel" type="Label" parent="Ghosts/AbyssalCreature"]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "B"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.4, 0.7, 1)
+
+[node name="SpellPages" type="Node2D" parent="."]
+
+[node name="IgnisPyre" type="Area2D" parent="SpellPages"]
+position = Vector2(36, 36)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Ignis Pyre"
+
+[node name="Shape1" type="CollisionShape2D" parent="SpellPages/IgnisPyre"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label1" type="Label" parent="SpellPages/IgnisPyre"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="AquaVeil" type="Area2D" parent="SpellPages"]
+position = Vector2(636, 36)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Aqua Veil"
+
+[node name="Shape2" type="CollisionShape2D" parent="SpellPages/AquaVeil"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label2" type="Label" parent="SpellPages/AquaVeil"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="TerraShield" type="Area2D" parent="SpellPages"]
+position = Vector2(132, 132)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Terra Shield"
+
+[node name="Shape3" type="CollisionShape2D" parent="SpellPages/TerraShield"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label3" type="Label" parent="SpellPages/TerraShield"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="VentusGale" type="Area2D" parent="SpellPages"]
+position = Vector2(540, 132)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Ventus Gale"
+
+[node name="Shape4" type="CollisionShape2D" parent="SpellPages/VentusGale"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label4" type="Label" parent="SpellPages/VentusGale"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="LuxBeam" type="Area2D" parent="SpellPages"]
+position = Vector2(36, 276)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Lux Beam"
+
+[node name="Shape5" type="CollisionShape2D" parent="SpellPages/LuxBeam"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label5" type="Label" parent="SpellPages/LuxBeam"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="UmbraShroud" type="Area2D" parent="SpellPages"]
+position = Vector2(636, 276)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Umbra Shroud"
+
+[node name="Shape6" type="CollisionShape2D" parent="SpellPages/UmbraShroud"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label6" type="Label" parent="SpellPages/UmbraShroud"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="CoroniumForge" type="Area2D" parent="SpellPages"]
+position = Vector2(252, 420)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Coronium Forge"
+
+[node name="Shape7" type="CollisionShape2D" parent="SpellPages/CoroniumForge"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label7" type="Label" parent="SpellPages/CoroniumForge"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="AtensWrath" type="Area2D" parent="SpellPages"]
+position = Vector2(420, 420)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Aten's Wrath"
+
+[node name="Shape8" type="CollisionShape2D" parent="SpellPages/AtensWrath"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label8" type="Label" parent="SpellPages/AtensWrath"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="SabathasWard" type="Area2D" parent="SpellPages"]
+position = Vector2(36, 564)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Sabatha's Ward"
+
+[node name="Shape9" type="CollisionShape2D" parent="SpellPages/SabathasWard"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label9" type="Label" parent="SpellPages/SabathasWard"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="FenrirsChain" type="Area2D" parent="SpellPages"]
+position = Vector2(636, 564)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Fenrir's Chain"
+
+[node name="Shape10" type="CollisionShape2D" parent="SpellPages/FenrirsChain"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label10" type="Label" parent="SpellPages/FenrirsChain"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="AntiumsEcho" type="Area2D" parent="SpellPages"]
+position = Vector2(132, 684)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Antium's Echo"
+
+[node name="Shape11" type="CollisionShape2D" parent="SpellPages/AntiumsEcho"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label11" type="Label" parent="SpellPages/AntiumsEcho"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="MyramarsGate" type="Area2D" parent="SpellPages"]
+position = Vector2(540, 684)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("4_page")
+page_name = "Myramar's Gate"
+
+[node name="Shape12" type="CollisionShape2D" parent="SpellPages/MyramarsGate"]
+shape = SubResource("CircleShape2D_page")
+
+[node name="Label12" type="Label" parent="SpellPages/MyramarsGate"]
+offset_left = -4.0
+offset_top = -6.0
+offset_right = 4.0
+offset_bottom = 6.0
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="SphereOfDarkness" type="Area2D" parent="."]
+position = Vector2(336, 84)
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("5_sphere")
+
+[node name="SphereShape" type="CollisionShape2D" parent="SphereOfDarkness"]
+shape = SubResource("CircleShape2D_sphere")
+
+[node name="SphereLabel" type="Label" parent="SphereOfDarkness"]
+offset_left = -6.0
+offset_top = -8.0
+offset_right = 6.0
+offset_bottom = 8.0
+text = "S"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.5, 0, 0.8, 1)
+
+[node name="HUD" parent="." instance=ExtResource("6_hud")]
+
+[node name="MazeBackground" type="ColorRect" parent="."]
+z_index = -10
+offset_right = 672.0
+offset_bottom = 744.0
+color = Color(0.08, 0.04, 0.02, 1)
