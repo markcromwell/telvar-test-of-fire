@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://level1_scene"]
+[gd_scene load_steps=8 format=3 uid="uid://level1_scene"]
 
 [ext_resource type="Script" path="res://scripts/Level1.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/Player.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/Ghost.gd" id="3_ghost"]
 [ext_resource type="Script" path="res://scripts/SpellPage.gd" id="4_page"]
 [ext_resource type="PackedScene" uid="uid://hud_scene" path="res://scenes/HUD.tscn" id="5_hud"]
+[ext_resource type="Script" path="res://scripts/SphereOfDarkness.gd" id="6_sphere"]
 
 [node name="Level1" type="Node2D"]
 script = ExtResource("1_level")
@@ -236,6 +237,10 @@ shape = SubResource("RectangleShape2D_page12")
 position = Vector2(336, 372)
 collision_layer = 8
 collision_mask = 2
+script = ExtResource("6_sphere")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SphereOfDarkness"]
+shape = SubResource("CircleShape2D_sphere")
 
 [node name="HUD" parent="." instance=ExtResource("5_hud")]
 
@@ -295,3 +300,6 @@ size = Vector2(16, 16)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_page12"]
 size = Vector2(16, 16)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_sphere"]
+radius = 10.0

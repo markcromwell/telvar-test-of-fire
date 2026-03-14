@@ -137,6 +137,19 @@ check("HUD.tscn: no null script expression",
       'get_path().replace("UI.gd", "SpellMeter.gd")' not in hud)
 check("HUD.tscn: load_steps=4",                          "load_steps=4" in hud)
 
+
+# -- Phase 6 fixes: Level scenes SphereOfDarkness ------------------------------
+l1 = open("scenes/Level1.tscn", encoding="utf-8").read() if os.path.isfile("scenes/Level1.tscn") else ""
+check("Level1.tscn: SphereOfDarkness.gd ext_resource",  "SphereOfDarkness.gd" in l1)
+check("Level1.tscn: SphereOfDarkness has script",        'script = ExtResource("6_sphere")' in l1)
+check("Level1.tscn: SphereOfDarkness CollisionShape2D",  'parent="SphereOfDarkness"' in l1)
+check("Level1.tscn: CircleShape2D present",              "CircleShape2D_sphere" in l1)
+# Levels 2-6 confirmed to have no SphereOfDarkness node -- no fix needed
+for lvl in [2, 3, 4, 5, 6]:
+    lx = open(f"scenes/Level{lvl}.tscn", encoding="utf-8").read() if os.path.isfile(f"scenes/Level{lvl}.tscn") else ""
+    check(f"Level{lvl}.tscn: no bare SphereOfDarkness Area2D without script",
+          not ('name="SphereOfDarkness" type="Area2D"' in lx and 'SphereOfDarkness.gd' not in lx))
+
 # ── Report ───────────────────────────────────────────────────────────────────
 total = len(PASS) + len(FAIL)
 print(f"\nTelvar Validator — {len(PASS)} pass, {len(FAIL)} fail, {total} checks")
