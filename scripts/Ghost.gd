@@ -197,8 +197,7 @@ func _move_ghost(delta: float) -> void:
 		if current_state == State.EATEN and position.distance_to(home_position) < TILE_SIZE:
 			current_state = State.SCATTER
 			_state_timer = SCATTER_TIME
-			if sprite:
-				sprite.modulate.a = 1.0
+			_configure_type()
 	else:
 		position += move_vec
 
