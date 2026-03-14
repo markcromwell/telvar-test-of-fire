@@ -103,6 +103,11 @@ check("GameManager: _score_multiplier var",         "_score_multiplier" in gm)
 check("GameManager: reset clears bonus flag",       "_bonus_item_emitted = false" in gm)
 check("GameManager: add_score uses multiplier",     "points * _score_multiplier" in gm)
 
+
+# -- Phase 2 fixes: SpellPage passes page_name ----------------------------------
+sp = open("scripts/SpellPage.gd", encoding="utf-8").read() if os.path.isfile("scripts/SpellPage.gd") else ""
+check("SpellPage: passes page_name to GameManager", "collect_spell_page(page_name)" in sp)
+
 # ── Report ───────────────────────────────────────────────────────────────────
 total = len(PASS) + len(FAIL)
 print(f"\nTelvar Validator — {len(PASS)} pass, {len(FAIL)} fail, {total} checks")
