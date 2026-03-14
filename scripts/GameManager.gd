@@ -32,6 +32,9 @@ var max_respawns := 0
 # Elemental Guardian vulnerability (Level 4)
 var elemental_vulnerable := false
 
+# Subtitle toggle (default on)
+var subtitle_enabled := true
+
 var _banish_timer := 0.0
 
 

@@ -18,6 +18,7 @@ func _ready() -> void:
 	GameManager.start_level(level_index)
 	GameManager.banish_mode_started.connect(_on_banish_started)
 	GameManager.banish_mode_ended.connect(_on_banish_ended)
+	AudioManager.play_level_start(level_index)
 	_setup_level()
 
 
@@ -45,6 +46,7 @@ func spawn_ghost(ghost_type: int, pos: Vector2, id: String, waypoints: Array[Vec
 
 
 func _on_banish_started() -> void:
+	AudioManager.play_banish_mode()
 	for ghost in ghosts:
 		if ghost and is_instance_valid(ghost):
 			ghost.enter_frightened()
@@ -65,6 +67,7 @@ func _on_ghost_banished(ghost: CharacterBody2D) -> void:
 func _on_ghost_reached_player(ghost: CharacterBody2D) -> void:
 	if player:
 		player.die()
+		AudioManager.play_death_taunt()
 		GameManager.lose_life()
 		if GameManager.lives > 0:
 			# Respawn after delay
