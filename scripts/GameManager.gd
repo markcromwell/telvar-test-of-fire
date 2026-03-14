@@ -2,98 +2,97 @@ extends Node
 
 signal score_changed(new_score: int)
 signal lives_changed(new_lives: int)
-signal spell_meter_changed(value: float)
-signal level_completed
-signal game_over
+signal spell_meter_changed(pct: float)
+signal level_completed(level_index: int)
+signal page_collected(page_name: String)
 signal banish_mode_started
 signal banish_mode_ended
+signal game_over
 
-const TOTAL_SPELL_PAGES := 12
 const BANISH_DURATION := 8.0
-const GHOST_SCORES := [50, 100, 200, 400]
+const COMBO_SCORES := [50, 100, 200, 400]
+const PAGE_SCORE := 10
 const MAX_LIVES := 3
 
 var score: int = 0
 var lives: int = MAX_LIVES
-var spell_pages_collected: int = 0
 var current_level: int = 1
-var is_banish_mode: bool = false
-var banish_combo: int = 0
-var level_timer: float = 0.0
-var is_paused: bool = false
+var spell_meter_pct: float = 0.0
+var banish_active: bool = false
+var combo_index: int = 0
+var collected_pages: Array[String] = []
+var level_start_time: float = 0.0
+var total_pages_in_level: int = 0
 
-var _banish_timer: float = 0.0
+var _banish_timer: Timer
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
-
-
-func _process(delta: float) -> void:
-	if is_paused:
-		return
-	level_timer += delta
-	if is_banish_mode:
-		_banish_timer -= delta
-		if _banish_timer <= 0.0:
-			end_banish_mode()
+	_banish_timer = Timer.new()
+	_banish_timer.one_shot = true
+	_banish_timer.timeout.connect(_on_banish_timeout)
+	add_child(_banish_timer)
 
 
 func reset_game() -> void:
 	score = 0
 	lives = MAX_LIVES
-	spell_pages_collected = 0
 	current_level = 1
-	is_banish_mode = false
-	banish_combo = 0
-	level_timer = 0.0
+	spell_meter_pct = 0.0
+	banish_active = false
+	combo_index = 0
+	collected_pages.clear()
 	score_changed.emit(score)
 	lives_changed.emit(lives)
-	spell_meter_changed.emit(0.0)
+	spell_meter_changed.emit(spell_meter_pct)
 
 
-func reset_level() -> void:
-	spell_pages_collected = 0
-	is_banish_mode = false
-	banish_combo = 0
-	level_timer = 0.0
-	spell_meter_changed.emit(0.0)
+func start_level(level_index: int, page_count: int) -> void:
+	current_level = level_index
+	total_pages_in_level = page_count
+	spell_meter_pct = 0.0
+	combo_index = 0
+	collected_pages.clear()
+	banish_active = false
+	level_start_time = Time.get_ticks_msec() / 1000.0
+	spell_meter_changed.emit(spell_meter_pct)
 
 
-func add_score(points: int) -> void:
-	score += points
-	score_changed.emit(score)
+func collect_page(page_name: String) -> void:
+	if page_name in collected_pages:
+		return
+	collected_pages.append(page_name)
+	add_score(PAGE_SCORE)
+	page_collected.emit(page_name)
+	if total_pages_in_level > 0:
+		spell_meter_pct = float(collected_pages.size()) / float(total_pages_in_level)
+		spell_meter_changed.emit(spell_meter_pct)
+	if spell_meter_pct >= 1.0:
+		activate_banish()
 
 
-func collect_spell_page() -> void:
-	spell_pages_collected += 1
-	add_score(10)
-	var meter_value := float(spell_pages_collected) / float(TOTAL_SPELL_PAGES)
-	spell_meter_changed.emit(meter_value)
-	if spell_pages_collected >= TOTAL_SPELL_PAGES:
-		level_completed.emit()
-
-
-func activate_banish_mode() -> void:
-	is_banish_mode = true
-	banish_combo = 0
-	_banish_timer = BANISH_DURATION
+func activate_banish() -> void:
+	banish_active = true
+	combo_index = 0
 	banish_mode_started.emit()
-
-
-func end_banish_mode() -> void:
-	is_banish_mode = false
-	banish_combo = 0
-	_banish_timer = 0.0
-	banish_mode_ended.emit()
+	_banish_timer.start(BANISH_DURATION)
 
 
 func banish_ghost() -> int:
-	var idx := mini(banish_combo, GHOST_SCORES.size() - 1)
-	var points := GHOST_SCORES[idx]
-	banish_combo += 1
-	add_score(points)
-	return points
+	var pts := COMBO_SCORES[mini(combo_index, COMBO_SCORES.size() - 1)]
+	combo_index += 1
+	add_score(pts)
+	return pts
+
+
+func _on_banish_timeout() -> void:
+	banish_active = false
+	banish_mode_ended.emit()
+
+
+func add_score(pts: int) -> void:
+	score += pts
+	score_changed.emit(score)
 
 
 func lose_life() -> void:
@@ -103,10 +102,11 @@ func lose_life() -> void:
 		game_over.emit()
 
 
-func get_time_bonus() -> int:
-	return int(max(0, 240.0 - level_timer) * 10)
-
-
-func set_paused(paused: bool) -> void:
-	is_paused = paused
-	get_tree().paused = paused
+func complete_level() -> void:
+	var elapsed := (Time.get_ticks_msec() / 1000.0) - level_start_time
+	var time_bonus := int(max(0.0, (240.0 - elapsed)) * 10.0)
+	add_score(time_bonus)
+	var perfect := collected_pages.size() == total_pages_in_level
+	if perfect:
+		add_score(500)
+	level_completed.emit(current_level)

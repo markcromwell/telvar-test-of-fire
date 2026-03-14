@@ -1,113 +1,60 @@
 extends CanvasLayer
 
-signal resume_pressed
-signal restart_pressed
-signal quit_pressed
+signal lore_dismissed
 
-@onready var score_label: Label = %ScoreLabel
-@onready var level_name_label: Label = %LevelNameLabel
-@onready var life_icons: HBoxContainer = %LifeIcons
-@onready var spell_meter: Control = %SpellMeter
-@onready var pause_menu: PanelContainer = %PauseMenu
-@onready var lore_popup: PanelContainer = %LorePopup
-@onready var lore_text: Label = %LoreText
-
-var is_pause_menu_open: bool = false
+@onready var score_label: Label = $HUD/ScoreLabel
+@onready var lives_label: Label = $HUD/LivesLabel
+@onready var level_label: Label = $HUD/LevelLabel
+@onready var lore_panel: PanelContainer = $LorePopup
+@onready var lore_text: Label = $LorePopup/MarginContainer/LoreText
+@onready var rank_up_label: Label = $RankUpLabel
 
 
 func _ready() -> void:
 	GameManager.score_changed.connect(_on_score_changed)
 	GameManager.lives_changed.connect(_on_lives_changed)
-	GameManager.level_completed.connect(_on_level_completed)
-	pause_menu.visible = false
-	lore_popup.visible = false
-	_update_score(0)
-	_update_lives(GameManager.MAX_LIVES)
-
-
-func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause"):
-		_toggle_pause()
-
-
-func _toggle_pause() -> void:
-	if lore_popup.visible:
-		return
-	is_pause_menu_open = not is_pause_menu_open
-	pause_menu.visible = is_pause_menu_open
-	GameManager.set_paused(is_pause_menu_open)
+	lore_panel.visible = false
+	if rank_up_label:
+		rank_up_label.visible = false
 
 
 func _on_score_changed(new_score: int) -> void:
-	_update_score(new_score)
+	score_label.text = "Score: %d" % new_score
 
 
 func _on_lives_changed(new_lives: int) -> void:
-	_update_lives(new_lives)
-
-
-func _on_level_completed() -> void:
-	show_lore_popup()
-
-
-func _update_score(value: int) -> void:
-	if score_label:
-		score_label.text = "SCORE: %06d" % value
-
-
-func _update_lives(count: int) -> void:
-	if not life_icons:
-		return
-	for i in life_icons.get_child_count():
-		var icon := life_icons.get_child(i)
-		icon.visible = i < count
+	lives_label.text = "Lives: %d" % new_lives
 
 
 func set_level_name(level_name: String) -> void:
-	if level_name_label:
-		level_name_label.text = level_name
+	level_label.text = level_name
 
 
-func show_lore_popup() -> void:
-	var lore_messages := {
-		1: "The Ancients knew how to forge coronium. That knowledge died with Antium.",
-		2: "The Binding Chamber held spirits for millennia. Now the seals weaken.",
-		3: "Every spell in the Library was written in blood. Some still remember.",
-		4: "The Lens Complex bends light and truth alike.",
-		5: "The Vaults were never meant to be opened from the outside.",
-		6: "Telvar saw the truth too late. Antica awaited."
-	}
-	var msg: String = lore_messages.get(GameManager.current_level, "")
-	if msg == "":
-		return
-	if lore_text:
-		lore_text.text = msg
-	lore_popup.visible = true
-	GameManager.set_paused(true)
-
-	var timer := get_tree().create_timer(3.0)
-	await timer.timeout
+func show_lore(text: String) -> void:
+	lore_text.text = text
+	lore_panel.visible = true
+	await get_tree().create_timer(0.5).timeout
+	set_process_input(true)
 
 
-func _on_resume_button_pressed() -> void:
-	_toggle_pause()
-	resume_pressed.emit()
+func _input(event: InputEvent) -> void:
+	if lore_panel.visible and event.is_pressed():
+		lore_panel.visible = false
+		set_process_input(false)
+		lore_dismissed.emit()
 
 
-func _on_restart_button_pressed() -> void:
-	pause_menu.visible = false
-	is_pause_menu_open = false
-	GameManager.set_paused(false)
-	restart_pressed.emit()
+func play_rank_up_animation(gem_node: Node2D, subtitle: String) -> void:
+	if rank_up_label:
+		rank_up_label.text = subtitle
+		rank_up_label.visible = true
 
+	if gem_node:
+		var tween := gem_node.create_tween()
+		tween.tween_property(gem_node, "scale", Vector2(1.3, 1.3), 0.25)
+		tween.tween_property(gem_node, "scale", Vector2(1.0, 1.0), 0.25)
+		await tween.finished
 
-func _on_quit_button_pressed() -> void:
-	pause_menu.visible = false
-	is_pause_menu_open = false
-	GameManager.set_paused(false)
-	quit_pressed.emit()
-
-
-func _on_continue_button_pressed() -> void:
-	lore_popup.visible = false
-	GameManager.set_paused(false)
+	if rank_up_label:
+		await get_tree().create_timer(1.0).timeout
+		rank_up_label.visible = false
