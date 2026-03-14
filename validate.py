@@ -86,6 +86,23 @@ if gd_errors:
 else:
     PASS.append("GDScript syntax (basic check)")
 
+
+# -- Phase 1 fixes: GameManager new API -----------------------------------------
+gm = open("scripts/GameManager.gd", encoding="utf-8").read() if os.path.isfile("scripts/GameManager.gd") else ""
+check("GameManager: signal bonus_item_available",   "signal bonus_item_available" in gm)
+check("GameManager: signal page_collected",         "signal page_collected" in gm)
+check("GameManager: signal ghost_radar_started",    "signal ghost_radar_started" in gm)
+check("GameManager: signal ghost_radar_ended",      "signal ghost_radar_ended" in gm)
+check("GameManager: gain_life()",                   "func gain_life()" in gm)
+check("GameManager: activate_score_multiplier()",   "func activate_score_multiplier(" in gm)
+check("GameManager: activate_ghost_radar()",        "func activate_ghost_radar(" in gm)
+check("GameManager: is_meter_full()",               "func is_meter_full()" in gm)
+check("GameManager: collect_spell_page page_name",  "collect_spell_page(page_name" in gm)
+check("GameManager: _bonus_item_emitted flag",      "_bonus_item_emitted" in gm)
+check("GameManager: _score_multiplier var",         "_score_multiplier" in gm)
+check("GameManager: reset clears bonus flag",       "_bonus_item_emitted = false" in gm)
+check("GameManager: add_score uses multiplier",     "points * _score_multiplier" in gm)
+
 # ── Report ───────────────────────────────────────────────────────────────────
 total = len(PASS) + len(FAIL)
 print(f"\nTelvar Validator — {len(PASS)} pass, {len(FAIL)} fail, {total} checks")

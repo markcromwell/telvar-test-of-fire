@@ -7,6 +7,10 @@ signal level_completed(level_num: int)
 signal game_over
 signal banish_mode_started
 signal banish_mode_ended
+signal page_collected(page_name: String)
+signal bonus_item_available
+signal ghost_radar_started
+signal ghost_radar_ended
 
 const MAX_LIVES: int = 3
 const TOTAL_SPELL_PAGES: int = 12
@@ -26,6 +30,10 @@ var level_time: float = 0.0
 var is_game_active: bool = false
 
 var _banish_timer: float = 0.0
+var _bonus_item_emitted: bool = false
+var _score_multiplier: int = 1
+var _score_multiplier_timer: float = 0.0
+var _ghost_radar_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -39,6 +47,14 @@ func _process(delta: float) -> void:
 		_banish_timer -= delta
 		if _banish_timer <= 0.0:
 			_end_banish_mode()
+	if _score_multiplier_timer > 0.0:
+		_score_multiplier_timer -= delta
+		if _score_multiplier_timer <= 0.0:
+			_score_multiplier = 1
+	if _ghost_radar_timer > 0.0:
+		_ghost_radar_timer -= delta
+		if _ghost_radar_timer <= 0.0:
+			ghost_radar_ended.emit()
 
 
 func new_game() -> void:
@@ -60,6 +76,10 @@ func _reset_level_state() -> void:
 	ghost_combo = 0
 	level_time = 0.0
 	_banish_timer = 0.0
+	_bonus_item_emitted = false
+	_score_multiplier = 1
+	_score_multiplier_timer = 0.0
+	_ghost_radar_timer = 0.0
 
 
 func start_level(level_num: int) -> void:
@@ -69,11 +89,15 @@ func start_level(level_num: int) -> void:
 	spell_meter_changed.emit(spell_meter)
 
 
-func collect_spell_page() -> void:
+func collect_spell_page(page_name: String = "") -> void:
 	spell_pages_collected += 1
 	add_score(PAGE_SCORE)
 	spell_meter = float(spell_pages_collected) / float(TOTAL_SPELL_PAGES)
 	spell_meter_changed.emit(spell_meter)
+	page_collected.emit(page_name)
+	if not _bonus_item_emitted and spell_pages_collected >= TOTAL_SPELL_PAGES / 2:
+		_bonus_item_emitted = true
+		bonus_item_available.emit()
 	if spell_pages_collected >= TOTAL_SPELL_PAGES:
 		_start_banish_mode()
 
@@ -104,7 +128,7 @@ func banish_ghost() -> int:
 
 
 func add_score(points: int) -> void:
-	score += points
+	score += points * _score_multiplier
 	score_changed.emit(score)
 
 
@@ -114,6 +138,29 @@ func lose_life() -> void:
 	if lives <= 0:
 		is_game_active = false
 		game_over.emit()
+
+
+func gain_life() -> void:
+	lives = mini(lives + 1, MAX_LIVES)
+	lives_changed.emit(lives)
+
+
+func activate_score_multiplier(multiplier: int, duration: float) -> void:
+	if duration <= 0.0:
+		return
+	_score_multiplier = multiplier
+	_score_multiplier_timer = duration
+
+
+func activate_ghost_radar(duration: float) -> void:
+	if duration <= 0.0:
+		return
+	_ghost_radar_timer = duration
+	ghost_radar_started.emit()
+
+
+func is_meter_full() -> bool:
+	return spell_pages_collected >= TOTAL_SPELL_PAGES
 
 
 func complete_level() -> void:
