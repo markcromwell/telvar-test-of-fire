@@ -63,6 +63,39 @@ func _make_pixel_texture(w: int, h: int, color: Color) -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 
+func _get_maze_layout() -> PackedStringArray:
+	return PackedStringArray()
+
+
+func _build_maze_walls() -> void:
+	var layout := _get_maze_layout()
+	if layout.is_empty():
+		return
+	var wall_color := Color(0.3, 0.15, 0.6)
+	var wall_parent := Node2D.new()
+	wall_parent.name = "MazeLayout"
+	add_child(wall_parent)
+	for row in layout.size():
+		var line: String = layout[row]
+		for col in line.length():
+			if line[col] == '#':
+				var body := StaticBody2D.new()
+				body.collision_layer = 1
+				body.position = Vector2(col * TILE_SIZE + TILE_SIZE * 0.5,
+						row * TILE_SIZE + TILE_SIZE * 0.5)
+				var shape := RectangleShape2D.new()
+				shape.size = Vector2(TILE_SIZE, TILE_SIZE)
+				var cshape := CollisionShape2D.new()
+				cshape.shape = shape
+				body.add_child(cshape)
+				var rect := ColorRect.new()
+				rect.size = Vector2(TILE_SIZE, TILE_SIZE)
+				rect.position = Vector2(-TILE_SIZE * 0.5, -TILE_SIZE * 0.5)
+				rect.color = wall_color
+				body.add_child(rect)
+				wall_parent.add_child(body)
+
+
 func _add_wall_visuals() -> void:
 	var maze_walls := get_node_or_null("MazeWalls")
 	if not maze_walls:
@@ -85,6 +118,7 @@ func _setup_level() -> void:
 		_player.died.connect(_on_player_died)
 		_player_spawn = _player.position
 	_add_wall_visuals()
+	_build_maze_walls()
 	var ghost_container := get_node_or_null("Ghosts")
 	if ghost_container:
 		for child in ghost_container.get_children():
