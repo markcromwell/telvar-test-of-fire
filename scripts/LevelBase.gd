@@ -67,14 +67,33 @@ func _get_maze_layout() -> PackedStringArray:
 	return PackedStringArray()
 
 
+func _get_tileset_path() -> String:
+	return ""
+
+
 func _build_maze_walls() -> void:
 	var layout := _get_maze_layout()
 	if layout.is_empty():
 		return
-	var wall_color := Color(0.3, 0.15, 0.6)
+	var tileset_tex: Texture2D = null
+	var ts_path := _get_tileset_path()
+	if ts_path != "":
+		var ts_img := Image.new()
+		if ts_img.load(ts_path) == OK:
+			tileset_tex = ImageTexture.create_from_image(ts_img)
+	# Atlas region for wall tile (index 12, col=0 row=1): stride = tile(32) + sep(2) = 34
+	var wall_region := Rect2(0, 34, 32, 32)
+	var tile_scale := Vector2(float(TILE_SIZE) / 32.0, float(TILE_SIZE) / 32.0)
 	var wall_parent := Node2D.new()
 	wall_parent.name = "MazeLayout"
 	add_child(wall_parent)
+	# Floor: single colored background rect (individual sprites would be too many nodes)
+	var floor_rect := ColorRect.new()
+	floor_rect.size = Vector2(MAZE_WIDTH * TILE_SIZE, MAZE_HEIGHT * TILE_SIZE)
+	floor_rect.color = Color(0.08, 0.05, 0.02)
+	floor_rect.z_index = -1
+	wall_parent.add_child(floor_rect)
+	# Wall tiles (with collision)
 	for row in layout.size():
 		var line: String = layout[row]
 		for col in line.length():
@@ -88,11 +107,20 @@ func _build_maze_walls() -> void:
 				var cshape := CollisionShape2D.new()
 				cshape.shape = shape
 				body.add_child(cshape)
-				var rect := ColorRect.new()
-				rect.size = Vector2(TILE_SIZE, TILE_SIZE)
-				rect.position = Vector2(-TILE_SIZE * 0.5, -TILE_SIZE * 0.5)
-				rect.color = wall_color
-				body.add_child(rect)
+				if tileset_tex:
+					var atlas := AtlasTexture.new()
+					atlas.atlas = tileset_tex
+					atlas.region = wall_region
+					var sp := Sprite2D.new()
+					sp.texture = atlas
+					sp.scale = tile_scale
+					body.add_child(sp)
+				else:
+					var rect := ColorRect.new()
+					rect.size = Vector2(TILE_SIZE, TILE_SIZE)
+					rect.position = Vector2(-TILE_SIZE * 0.5, -TILE_SIZE * 0.5)
+					rect.color = Color(0.3, 0.15, 0.6)
+					body.add_child(rect)
 				wall_parent.add_child(body)
 
 

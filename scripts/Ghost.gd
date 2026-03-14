@@ -35,38 +35,43 @@ func _ready() -> void:
 	_configure_type()
 
 
-func _ensure_sprite_texture() -> void:
-	if sprite and not sprite.texture:
-		var img := Image.create(20, 20, false, Image.FORMAT_RGBA8)
-		img.fill(Color.WHITE)
-		sprite.texture = ImageTexture.create_from_image(img)
-		sprite.scale = Vector2(1.2, 1.2)
+const GHOST_SPRITE_PATHS: Dictionary = {
+	0: "res://assets/sprites/ghosts/aemon_guardian.png",
+	1: "res://assets/sprites/ghosts/abyssal_creature.png",
+	2: "res://assets/sprites/ghosts/undead.png",
+	3: "res://assets/sprites/ghosts/elemental_guardian.png",
+	4: "res://assets/sprites/ghosts/hound_fenrir.png",
+}
 
 
 func _configure_type() -> void:
-	_ensure_sprite_texture()
 	match ghost_type:
 		GhostType.AEMON:
 			_speed = BASE_SPEED * 1.1
-			if sprite:
-				sprite.modulate = Color(1.0, 0.0, 0.0)
 		GhostType.ABYSSAL:
 			_speed = BASE_SPEED
-			if sprite:
-				sprite.modulate = Color(1.0, 0.5, 0.8)
 		GhostType.UNDEAD:
 			_speed = BASE_SPEED * 0.8
-			if sprite:
-				sprite.modulate = Color(0.3, 0.8, 1.0)
 		GhostType.ELEMENTAL:
 			_speed = BASE_SPEED * 0.9
 			_is_invulnerable = true
-			if sprite:
-				sprite.modulate = Color(1.0, 0.6, 0.0)
 		GhostType.HOUND:
 			_speed = BASE_SPEED * 1.2
-			if sprite:
-				sprite.modulate = Color(0.4, 0.0, 0.0)
+	if sprite:
+		var path: String = GHOST_SPRITE_PATHS.get(int(ghost_type), "")
+		var loaded := false
+		if path != "":
+			var img := Image.new()
+			if img.load(path) == OK:
+				sprite.texture = ImageTexture.create_from_image(img)
+				sprite.scale = Vector2(float(TILE_SIZE) / 64.0, float(TILE_SIZE) / 64.0)
+				sprite.modulate = Color.WHITE
+				loaded = true
+		if not loaded:
+			var fallback := Image.create(20, 20, false, Image.FORMAT_RGBA8)
+			fallback.fill(Color.WHITE)
+			sprite.texture = ImageTexture.create_from_image(fallback)
+			sprite.scale = Vector2(1.2, 1.2)
 
 
 func _physics_process(delta: float) -> void:
@@ -228,7 +233,13 @@ func enter_frightened() -> void:
 	if current_state != State.EATEN:
 		current_state = State.FRIGHTENED
 		if sprite:
-			sprite.modulate = Color(0.2, 0.2, 1.0)
+			var img := Image.new()
+			if img.load("res://assets/sprites/ghosts/ghost_frightened.png") == OK:
+				sprite.texture = ImageTexture.create_from_image(img)
+				sprite.scale = Vector2(float(TILE_SIZE) / 64.0, float(TILE_SIZE) / 64.0)
+				sprite.modulate = Color.WHITE
+			else:
+				sprite.modulate = Color(0.2, 0.2, 1.0)
 
 
 func exit_frightened() -> void:

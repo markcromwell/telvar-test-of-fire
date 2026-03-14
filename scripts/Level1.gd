@@ -1,6 +1,10 @@
 extends "res://scripts/LevelBase.gd"
 
 
+func _get_tileset_path() -> String:
+	return "res://assets/tilesets/level1_alchemical_labs.png"
+
+
 func _get_maze_layout() -> PackedStringArray:
 	return PackedStringArray([
 		"############################",

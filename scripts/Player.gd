@@ -22,9 +22,14 @@ func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
 	if sprite and not sprite.texture:
-		var img := Image.create(20, 20, false, Image.FORMAT_RGBA8)
-		img.fill(Color(0.2, 0.8, 1.0))
-		sprite.texture = ImageTexture.create_from_image(img)
+		var img := Image.new()
+		if img.load("res://assets/sprites/player/telvar_idle.png") == OK:
+			sprite.texture = ImageTexture.create_from_image(img)
+			sprite.scale = Vector2(float(TILE_SIZE) / 64.0, float(TILE_SIZE) / 64.0)
+		else:
+			var fallback := Image.create(20, 20, false, Image.FORMAT_RGBA8)
+			fallback.fill(Color(0.2, 0.8, 1.0))
+			sprite.texture = ImageTexture.create_from_image(fallback)
 
 
 func _physics_process(delta: float) -> void:
