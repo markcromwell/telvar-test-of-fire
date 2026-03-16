@@ -2,8 +2,8 @@ extends "res://scripts/LevelBase.gd"
 
 
 func _ready() -> void:
-	level_number = 3
-	level_name = "MAGIC LIBRARY"
+	level_number = 7
+	level_name = "THE NEXUS SPIRE"
 	super._ready()
 
 
@@ -16,4 +16,4 @@ func _get_floor_tile_path() -> String:
 
 
 func _get_floor_tint() -> Color:
-	return Color(0.9, 0.85, 0.1, 1.0)
+	return Color(1.0, 1.0, 1.0, 1.0)  # White — final level

@@ -1,6 +1,6 @@
 extends Node2D
 
-const TILE_SIZE: int = 32
+const TILE_SIZE: int = 48
 const MAZE_WIDTH: int = 28
 const MAZE_HEIGHT: int = 31
 
@@ -10,7 +10,7 @@ const MAZE_HEIGHT: int = 31
 var _player: CharacterBody2D
 var _ghosts: Array[CharacterBody2D] = []
 var _pages_remaining: int = 0
-var _player_spawn: Vector2 = Vector2(432, 752)
+var _player_spawn: Vector2 = Vector2(648, 1128)
 var _cached_maze: PackedStringArray = PackedStringArray()
 
 @onready var hud: CanvasLayer = $HUD
@@ -29,8 +29,8 @@ func _ready() -> void:
 
 func _setup_camera() -> void:
 	var cam := Camera2D.new()
-	cam.position = Vector2(448, 496)
-	cam.zoom = Vector2(0.72, 0.72)
+	cam.position = Vector2(672, 744)
+	cam.zoom = Vector2(0.48, 0.48)
 	add_child(cam)
 	cam.make_current()
 
@@ -62,8 +62,8 @@ func _handle_ghost_contact(ghost: CharacterBody2D) -> void:
 	# State enum: SCATTER=0, CHASE=1, FRIGHTENED=2, EATEN=3
 	var state: int = ghost.get("current_state") if ghost.get("current_state") != null else -1
 	if state == 2:
-		if ghost.has_method("get_banished"):
-			ghost.get_banished()
+		if ghost.has_method("get_eaten"):
+			ghost.get_eaten()
 	elif state == 0 or state == 1:
 		if _player.has_method("hit_by_ghost"):
 			_player.hit_by_ghost()
@@ -83,6 +83,14 @@ func _get_tileset_path() -> String:
 	return ""
 
 
+func _get_floor_tile_path() -> String:
+	return ""
+
+
+func _get_floor_tint() -> Color:
+	return Color.WHITE
+
+
 func _resolve_maze() -> PackedStringArray:
 	if not _cached_maze.is_empty():
 		return _cached_maze
@@ -97,25 +105,52 @@ func _build_maze_walls() -> void:
 	var layout := _resolve_maze()
 	if layout.is_empty():
 		return
+
+	# Wall: Kenney-style atlas tileset (32x32 tile at atlas row 1, col 0)
 	var tileset_tex: Texture2D = null
 	var ts_path := _get_tileset_path()
 	if ts_path != "":
 		var ts_img := Image.new()
 		if ts_img.load(ts_path) == OK:
 			tileset_tex = ImageTexture.create_from_image(ts_img)
-	# Atlas region for wall tile (index 12, col=0 row=1): stride = tile(32) + sep(2) = 34
 	var wall_region := Rect2(0, 34, 32, 32)
-	var tile_scale := Vector2(float(TILE_SIZE) / 32.0, float(TILE_SIZE) / 32.0)
+	var wall_scale := Vector2(float(TILE_SIZE) / 32.0, float(TILE_SIZE) / 32.0)
+
+	# Floor: custom 64x64 PNG scaled to 48x48
+	var floor_tex: Texture2D = null
+	var floor_path := _get_floor_tile_path()
+	if floor_path != "":
+		var fl_img := Image.new()
+		if fl_img.load(floor_path) == OK:
+			floor_tex = ImageTexture.create_from_image(fl_img)
+	var floor_scale := Vector2(48.0 / 64.0, 48.0 / 64.0)
+
 	var wall_parent := Node2D.new()
 	wall_parent.name = "MazeLayout"
 	add_child(wall_parent)
-	# Floor: single colored background rect
-	var floor_rect := ColorRect.new()
-	floor_rect.size = Vector2(MAZE_WIDTH * TILE_SIZE, MAZE_HEIGHT * TILE_SIZE)
-	floor_rect.color = Color(0.08, 0.05, 0.02)
-	floor_rect.z_index = -1
-	wall_parent.add_child(floor_rect)
-	# Wall tiles (with collision)
+
+	# Dark base background
+	var bg := ColorRect.new()
+	bg.size = Vector2(MAZE_WIDTH * TILE_SIZE, MAZE_HEIGHT * TILE_SIZE)
+	bg.color = Color(0.06, 0.04, 0.02)
+	bg.z_index = -2
+	wall_parent.add_child(bg)
+
+	# Floor tiles stamped under every cell (walls cover them)
+	if floor_tex:
+		for row in layout.size():
+			var line: String = layout[row]
+			for col in line.length():
+				var sp := Sprite2D.new()
+				sp.texture = floor_tex
+				sp.scale = floor_scale
+				sp.position = Vector2(col * TILE_SIZE + TILE_SIZE * 0.5,
+						row * TILE_SIZE + TILE_SIZE * 0.5)
+				sp.z_index = -1
+				sp.modulate = _get_floor_tint()
+				wall_parent.add_child(sp)
+
+	# Wall tiles with collision
 	for row in layout.size():
 		var line: String = layout[row]
 		for col in line.length():
@@ -135,7 +170,7 @@ func _build_maze_walls() -> void:
 					atlas.region = wall_region
 					var sp := Sprite2D.new()
 					sp.texture = atlas
-					sp.scale = tile_scale
+					sp.scale = wall_scale
 					body.add_child(sp)
 				else:
 					var rect := ColorRect.new()
@@ -160,23 +195,18 @@ func _build_nav_grid() -> void:
 
 
 func _generate_random_maze() -> PackedStringArray:
-	# Recursive backtracker on a 13-col x 15-row logical grid.
-	# Logical cell (lc, lr) maps to actual position (lc*2+1, lr*2+1).
-	# Moving between adjacent cells carves the wall between them.
 	const W: int = 28
 	const H: int = 31
-	const LC_MAX: int = 12  # 13 logical cols: 0..12
-	const LR_MAX: int = 14  # 15 logical rows: 0..14
+	const LC_MAX: int = 12
+	const LR_MAX: int = 14
 
-	# Start all walls
 	var grid: Array = []
 	for r in H:
 		var row: Array = []
 		for c in W:
-			row.append(true)  # true = wall
+			row.append(true)
 		grid.append(row)
 
-	# Carve using iterative DFS
 	var visited: Dictionary = {}
 	var start := Vector2i(0, 0)
 	grid[1][1] = false
@@ -200,7 +230,6 @@ func _generate_random_maze() -> PackedStringArray:
 			nbrs.shuffle()
 			var chosen: Vector2i = nbrs[0]
 			var d := chosen - cur
-			# Wall cell sits between cur and chosen in actual grid
 			var wall_col: int = cur.x * 2 + 1 + d.x
 			var wall_row: int = cur.y * 2 + 1 + d.y
 			grid[wall_row][wall_col] = false
@@ -208,18 +237,14 @@ func _generate_random_maze() -> PackedStringArray:
 			visited[chosen] = true
 			stack.append(chosen)
 
-	# Second pass: remove ~40% of remaining interior walls to create loops/intersections.
-	# A wall at (odd_row, even_col) connects two horizontal neighbors — remove it to add a shortcut.
-	# A wall at (even_row, odd_col) connects two vertical neighbors — same idea.
 	for r in range(1, H - 1):
 		for c in range(1, W - 1):
 			if not grid[r][c]:
-				continue  # already open
+				continue
 			var is_h_wall: bool = (r % 2 == 1) and (c % 2 == 0)
 			var is_v_wall: bool = (r % 2 == 0) and (c % 2 == 1)
 			if not (is_h_wall or is_v_wall):
 				continue
-			# Only remove if both sides are open (otherwise we'd open into a wall block)
 			var open_sides: bool = false
 			if is_h_wall:
 				open_sides = not grid[r][c - 1] and not grid[r][c + 1]
@@ -228,7 +253,6 @@ func _generate_random_maze() -> PackedStringArray:
 			if open_sides and randf() < 0.42:
 				grid[r][c] = false
 
-	# Overlay ghost house rows 12-16 (fixed for gameplay)
 	var ghost_rows: Array = [
 		"######.##.###..###.##.######",
 		"######.##.#......#.##.######",
@@ -240,11 +264,9 @@ func _generate_random_maze() -> PackedStringArray:
 		for c in W:
 			grid[12 + i][c] = ghost_rows[i][c] == "#"
 
-	# Ensure vertical corridors connect top/bottom through ghost house at col 6
 	grid[11][6] = false
 	grid[17][6] = false
 
-	# Enforce solid outer border
 	for c in W:
 		grid[0][c] = true
 		grid[H - 1][c] = true
@@ -252,7 +274,6 @@ func _generate_random_maze() -> PackedStringArray:
 		grid[r][0] = true
 		grid[r][W - 1] = true
 
-	# Build PackedStringArray
 	var result := PackedStringArray()
 	for r in H:
 		var line := ""

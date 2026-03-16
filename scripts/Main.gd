@@ -7,6 +7,7 @@ const LEVEL_SCENES: Array[String] = [
 	"res://scenes/Level4.tscn",
 	"res://scenes/Level5.tscn",
 	"res://scenes/Level6.tscn",
+	"res://scenes/Level7.tscn",
 ]
 
 var _current_level_node: Node = null
@@ -37,6 +38,7 @@ func _show_title() -> void:
 
 func _on_start_pressed() -> void:
 	GameManager.new_game()
+	AudioManager.play_music()
 	_tween_alpha(title_screen, 1.0, 0.0, 0.2)
 	var tween := create_tween()
 	tween.tween_interval(0.2)
@@ -72,12 +74,14 @@ func _on_level_completed(level_num: int) -> void:
 
 
 func _on_game_over() -> void:
+	AudioManager.stop_music()
 	_high_score_manager.check_and_save(GameManager.get_final_score())
 	var timer := get_tree().create_timer(2.0)
 	timer.timeout.connect(_show_title)
 
 
 func _show_ending() -> void:
+	AudioManager.stop_music()
 	_clear_level()
 	_high_score_manager.check_and_save(GameManager.get_final_score())
 	title_screen.visible = false

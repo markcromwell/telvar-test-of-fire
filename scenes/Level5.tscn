@@ -1,10 +1,22 @@
-[gd_scene load_steps=6 format=3 uid="uid://level5_scene"]
+[gd_scene load_steps=10 format=3 uid="uid://level5_scene"]
 
 [ext_resource type="Script" path="res://scripts/Level5.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/Player.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/Ghost.gd" id="3_ghost"]
 [ext_resource type="Script" path="res://scripts/SpellPage.gd" id="4_page"]
 [ext_resource type="PackedScene" uid="uid://hud_scene" path="res://scenes/HUD.tscn" id="5_hud"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_L5_g1"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_L5_g2"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_L5_g3"]
+size = Vector2(20, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_L5_g4"]
+size = Vector2(20, 20)
 
 [node name="Level5" type="Node2D"]
 script = ExtResource("1_level")
@@ -15,32 +27,32 @@ script = ExtResource("1_level")
 collision_layer = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="MazeWalls/TopWall"]
-position = Vector2(448, 0)
+position = Vector2(672, 0)
 shape = SubResource("RectangleShape2D_TopWall")
 
 [node name="BottomWall" type="StaticBody2D" parent="MazeWalls"]
 collision_layer = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="MazeWalls/BottomWall"]
-position = Vector2(448, 992)
+position = Vector2(672, 1488)
 shape = SubResource("RectangleShape2D_BottomWall")
 
 [node name="LeftWall" type="StaticBody2D" parent="MazeWalls"]
 collision_layer = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="MazeWalls/LeftWall"]
-position = Vector2(0, 496)
+position = Vector2(0, 744)
 shape = SubResource("RectangleShape2D_LeftWall")
 
 [node name="RightWall" type="StaticBody2D" parent="MazeWalls"]
 collision_layer = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="MazeWalls/RightWall"]
-position = Vector2(896, 496)
+position = Vector2(1344, 744)
 shape = SubResource("RectangleShape2D_RightWall")
 
 [node name="Player" type="CharacterBody2D" parent="."]
-position = Vector2(448, 752)
+position = Vector2(672, 1128)
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("2_player")
@@ -56,7 +68,7 @@ collision_mask = 1
 [node name="Ghosts" type="Node2D" parent="."]
 
 [node name="AemonGuardian" type="CharacterBody2D" parent="Ghosts"]
-position = Vector2(416, 368)
+position = Vector2(624, 552)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_ghost")
@@ -71,7 +83,7 @@ shape = SubResource("RectangleShape2D_g0")
 collision_mask = 1
 
 [node name="AbyssalCreature" type="CharacterBody2D" parent="Ghosts"]
-position = Vector2(448, 368)
+position = Vector2(672, 552)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_ghost")
@@ -86,7 +98,7 @@ shape = SubResource("RectangleShape2D_g1")
 collision_mask = 1
 
 [node name="Undead" type="CharacterBody2D" parent="Ghosts"]
-position = Vector2(480, 368)
+position = Vector2(720, 552)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_ghost")
@@ -101,7 +113,7 @@ shape = SubResource("RectangleShape2D_g2")
 collision_mask = 1
 
 [node name="HoundOfFenrir" type="CharacterBody2D" parent="Ghosts"]
-position = Vector2(512, 368)
+position = Vector2(768, 552)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_ghost")
@@ -115,10 +127,70 @@ shape = SubResource("RectangleShape2D_g3")
 [node name="RayCast2D" type="RayCast2D" parent="Ghosts/HoundOfFenrir"]
 collision_mask = 1
 
+[node name="Elemental" type="CharacterBody2D" parent="Ghosts"]
+position = Vector2(1224, 1416)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_ghost")
+ghost_type = 3
+
+[node name="Sprite2D" type="Sprite2D" parent="Ghosts/Elemental"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ghosts/Elemental"]
+shape = SubResource("RectangleShape2D_L5_g1")
+
+[node name="RayCast2D" type="RayCast2D" parent="Ghosts/Elemental"]
+collision_mask = 1
+
+[node name="AemonB" type="CharacterBody2D" parent="Ghosts"]
+position = Vector2(72, 72)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_ghost")
+ghost_type = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Ghosts/AemonB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ghosts/AemonB"]
+shape = SubResource("RectangleShape2D_L5_g2")
+
+[node name="RayCast2D" type="RayCast2D" parent="Ghosts/AemonB"]
+collision_mask = 1
+
+[node name="AbyssalB" type="CharacterBody2D" parent="Ghosts"]
+position = Vector2(72, 1416)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_ghost")
+ghost_type = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="Ghosts/AbyssalB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ghosts/AbyssalB"]
+shape = SubResource("RectangleShape2D_L5_g3")
+
+[node name="RayCast2D" type="RayCast2D" parent="Ghosts/AbyssalB"]
+collision_mask = 1
+
+[node name="UndeadB" type="CharacterBody2D" parent="Ghosts"]
+position = Vector2(1032, 360)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_ghost")
+ghost_type = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="Ghosts/UndeadB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ghosts/UndeadB"]
+shape = SubResource("RectangleShape2D_L5_g4")
+
+[node name="RayCast2D" type="RayCast2D" parent="Ghosts/UndeadB"]
+collision_mask = 1
+
 [node name="SpellPages" type="Node2D" parent="."]
 
 [node name="Page1" type="Area2D" parent="SpellPages"]
-position = Vector2(64, 64)
+position = Vector2(96, 96)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -129,7 +201,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page2" type="Area2D" parent="SpellPages"]
-position = Vector2(832, 64)
+position = Vector2(1248, 96)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -140,7 +212,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page3" type="Area2D" parent="SpellPages"]
-position = Vector2(64, 928)
+position = Vector2(96, 1392)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -151,7 +223,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page4" type="Area2D" parent="SpellPages"]
-position = Vector2(832, 928)
+position = Vector2(1248, 1392)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -162,7 +234,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page5" type="Area2D" parent="SpellPages"]
-position = Vector2(224, 224)
+position = Vector2(336, 336)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -173,7 +245,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page6" type="Area2D" parent="SpellPages"]
-position = Vector2(672, 224)
+position = Vector2(1008, 336)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -184,7 +256,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page7" type="Area2D" parent="SpellPages"]
-position = Vector2(224, 496)
+position = Vector2(336, 744)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -195,7 +267,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page8" type="Area2D" parent="SpellPages"]
-position = Vector2(672, 496)
+position = Vector2(1008, 744)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -206,7 +278,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page9" type="Area2D" parent="SpellPages"]
-position = Vector2(448, 160)
+position = Vector2(672, 240)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -217,7 +289,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page10" type="Area2D" parent="SpellPages"]
-position = Vector2(448, 832)
+position = Vector2(672, 1248)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -228,7 +300,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page11" type="Area2D" parent="SpellPages"]
-position = Vector2(160, 672)
+position = Vector2(240, 1008)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")
@@ -239,7 +311,7 @@ script = ExtResource("4_page")
 shape = SubResource("RectangleShape2D_sp")
 
 [node name="Page12" type="Area2D" parent="SpellPages"]
-position = Vector2(736, 672)
+position = Vector2(1104, 1008)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_page")

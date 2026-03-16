@@ -8,6 +8,8 @@ signal game_over
 signal banish_mode_started
 signal banish_mode_ended
 signal page_collected(page_name: String)
+signal mana_changed(current: float, max_val: float)
+signal spell_tier_changed(tier: int)
 signal bonus_item_available
 signal ghost_radar_started
 signal ghost_radar_ended
@@ -17,7 +19,7 @@ const TOTAL_SPELL_PAGES: int = 12
 const BANISH_DURATION: float = 8.0
 const GHOST_SCORES: Array[int] = [50, 100, 200, 400]
 const PAGE_SCORE: int = 10
-const LEVEL_COUNT: int = 2
+const LEVEL_COUNT: int = 7
 
 var nav_grid: Array = []  # Array[Array[bool]]; nav_grid[row][col] = true if walkable
 
@@ -28,6 +30,10 @@ var spell_meter: float = 0.0
 var current_level: int = 1
 var is_banish_mode: bool = false
 var ghost_combo: int = 0
+var spell_tier: int = 0
+var mana: float = 30.0
+var max_mana: float = 30.0
+var _mana_regen_timer: float = 0.0
 var level_time: float = 0.0
 var is_game_active: bool = false
 
@@ -57,6 +63,12 @@ func _process(delta: float) -> void:
 		_ghost_radar_timer -= delta
 		if _ghost_radar_timer <= 0.0:
 			ghost_radar_ended.emit()
+	if is_game_active and mana < max_mana:
+		_mana_regen_timer += delta
+		if _mana_regen_timer >= 30.0:
+			_mana_regen_timer = 0.0
+			mana = minf(mana + 10.0, max_mana)
+			mana_changed.emit(mana, max_mana)
 
 
 func new_game() -> void:
@@ -65,10 +77,12 @@ func new_game() -> void:
 	current_level = 1
 	is_game_active = true
 	level_time = 0.0
+	spell_tier = 0
 	_reset_level_state()
 	score_changed.emit(score)
 	lives_changed.emit(lives)
 	spell_meter_changed.emit(spell_meter)
+	mana_changed.emit(mana, max_mana)
 
 
 func _reset_level_state() -> void:
@@ -87,8 +101,11 @@ func _reset_level_state() -> void:
 func start_level(level_num: int) -> void:
 	current_level = level_num
 	_reset_level_state()
+	max_mana = float(current_level) * 30.0
+	mana = max_mana
 	is_game_active = true
 	spell_meter_changed.emit(spell_meter)
+	mana_changed.emit(mana, max_mana)
 
 
 func collect_spell_page(page_name: String = "") -> void:
@@ -165,7 +182,23 @@ func is_meter_full() -> bool:
 	return spell_pages_collected >= TOTAL_SPELL_PAGES
 
 
+func can_fire_spell() -> bool:
+	return mana >= 10.0
+
+
+func spend_mana(amount: float) -> void:
+	mana = maxf(mana - amount, 0.0)
+	_mana_regen_timer = 0.0
+	mana_changed.emit(mana, max_mana)
+
+
+func upgrade_spell_tier() -> void:
+	spell_tier = mini(spell_tier + 1, 6)
+	spell_tier_changed.emit(spell_tier)
+
+
 func complete_level() -> void:
+	upgrade_spell_tier()
 	var time_bonus: int = int(max(0.0, 240.0 - level_time) * 10.0)
 	add_score(time_bonus)
 	if spell_pages_collected >= TOTAL_SPELL_PAGES:

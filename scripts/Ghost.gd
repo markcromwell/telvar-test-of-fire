@@ -7,7 +7,7 @@ enum State { SCATTER, CHASE, FRIGHTENED, EATEN }
 
 @export var ghost_type: GhostType = GhostType.AEMON
 
-const TILE_SIZE: int = 32
+const TILE_SIZE: int = 48
 const BASE_SPEED: float = 90.0
 const SCATTER_TIME: float = 7.0
 const CHASE_TIME: float = 20.0
@@ -21,6 +21,16 @@ const DIR_ROW: Dictionary = {
 	Vector2.UP:    3,
 }
 
+# Scatter corner targets (tile centres): each ghost heads to a fixed maze corner
+# Maze is 28x31 tiles at 32px. Formula: col*32+16, row*32+16
+const SCATTER_TARGETS: Dictionary = {
+	0: Vector2(1272, 72),  # AEMON     — top-right
+	1: Vector2(72, 72),    # ABYSSAL   — top-left
+	2: Vector2(72, 1416),  # UNDEAD    — bottom-left
+	3: Vector2(1272, 1416),# ELEMENTAL — bottom-right
+	4: Vector2(672, 744),  # HOUND     — centre (never frightened, wanders)
+}
+
 var current_state: State = State.SCATTER
 var current_direction: Vector2 = Vector2.LEFT
 var target_position: Vector2 = Vector2.ZERO
@@ -29,8 +39,10 @@ var home_position: Vector2 = Vector2.ZERO
 var _state_timer: float = 0.0
 var _speed: float = BASE_SPEED
 var _is_invulnerable: bool = false
+var _health: int = 1
 var _anim_timer: float = 0.0
 var _anim_frame: int = 0
+var _flash_timer: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -43,6 +55,7 @@ func _ready() -> void:
 	collision_layer = 4
 	collision_mask = 1
 	_state_timer = SCATTER_TIME
+	_health = GameManager.current_level * 2
 	_configure_type()
 
 
@@ -77,7 +90,7 @@ func _configure_type() -> void:
 				sprite.texture = ImageTexture.create_from_image(img)
 				sprite.hframes = 4
 				sprite.vframes = 4
-				sprite.scale = Vector2(float(TILE_SIZE) / 64.0, float(TILE_SIZE) / 64.0)
+				sprite.scale = Vector2(48.0 / 64.0, 48.0 / 64.0)
 				sprite.modulate = Color.WHITE
 				loaded = true
 		if not loaded:
@@ -104,6 +117,13 @@ func _update_sprite_frame() -> void:
 
 func _physics_process(delta: float) -> void:
 	_update_state_timer(delta)
+	if current_state == State.FRIGHTENED:
+		_flash_timer += delta
+		if _flash_timer >= 0.18:
+			_flash_timer = 0.0
+			if sprite:
+				var bright: bool = sprite.modulate.b > 0.7
+				sprite.modulate = Color(0.2, 0.3, 0.6) if bright else Color(0.5, 0.6, 1.0)
 	if is_moving:
 		_move_ghost(delta)
 		_tick_anim(delta)
@@ -191,11 +211,11 @@ func _get_bfs_target() -> Vector2:
 		return Vector2.ZERO
 	match current_state:
 		State.SCATTER:
-			return home_position
+			return SCATTER_TARGETS.get(int(ghost_type), home_position)
 		State.CHASE:
 			return player.global_position + player.get("current_direction") * TILE_SIZE * 4
 		State.FRIGHTENED:
-			var away := position - player.global_position
+			var away: Vector2 = position - player.global_position
 			return position + away * 3.0
 		State.EATEN:
 			return home_position
@@ -214,28 +234,37 @@ func _can_move_dir(direction: Vector2) -> bool:
 	return not ray_cast.is_colliding()
 
 
+func take_damage(amount: int = 1) -> void:
+	if _is_invulnerable or current_state == State.EATEN:
+		return
+	_health -= amount
+	if _health <= 0:
+		get_eaten()
+	else:
+		if sprite:
+			var tween := create_tween()
+			tween.tween_property(sprite, "modulate", Color(1.0, 0.3, 0.3), 0.05)
+			tween.tween_property(sprite, "modulate", sprite.modulate, 0.1)
+
+
 func enter_frightened() -> void:
 	if _is_invulnerable:
 		return
 	current_state = State.FRIGHTENED
 	_speed = BASE_SPEED * 0.5
+	_flash_timer = 0.0
+	_configure_type()
+	AudioManager.play_ghost_frightened()
 	if sprite:
-		var img := Image.new()
-		if img.load("res://assets/sprites/ghosts/ghost_frightened.png") == OK:
-			sprite.texture = ImageTexture.create_from_image(img)
-			sprite.hframes = 1
-			sprite.vframes = 1
-			sprite.frame = 0
-			sprite.scale = Vector2(float(TILE_SIZE) / 64.0, float(TILE_SIZE) / 64.0)
-			sprite.modulate = Color.WHITE
-		else:
-			sprite.modulate = Color(0.2, 0.2, 1.0)
+		sprite.modulate = Color(0.2, 0.3, 0.6)
 
 
 func exit_frightened() -> void:
 	current_state = State.SCATTER
 	_state_timer = SCATTER_TIME
 	_speed = BASE_SPEED
+	_flash_timer = 0.0
+	_health = GameManager.current_level * 2
 	_configure_type()
 
 
@@ -251,6 +280,7 @@ func get_eaten() -> void:
 			sprite.hframes = 1
 			sprite.vframes = 1
 			sprite.frame = 0
-			sprite.scale = Vector2(float(TILE_SIZE) / 64.0, float(TILE_SIZE) / 64.0)
+			sprite.scale = Vector2(48.0 / 64.0, 48.0 / 64.0)
 			sprite.modulate.a = 0.3
+	AudioManager.play_ghost_eaten()
 	eaten.emit()

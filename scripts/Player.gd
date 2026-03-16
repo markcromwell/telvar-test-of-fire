@@ -2,7 +2,7 @@ extends CharacterBody2D
 
 signal died
 
-const TILE_SIZE: int = 32
+const TILE_SIZE: int = 48
 const SPEED: float = 120.0
 const ANIM_FPS: float = 8.0
 
@@ -19,6 +19,7 @@ var queued_direction: Vector2 = Vector2.ZERO
 var target_position: Vector2 = Vector2.ZERO
 var is_moving: bool = false
 var is_alive: bool = true
+var _fire_cooldown: float = 0.0
 var _anim_timer: float = 0.0
 var _anim_frame: int = 0
 
@@ -38,7 +39,7 @@ func _ready() -> void:
 			sprite.texture = ImageTexture.create_from_image(img)
 			sprite.hframes = 4
 			sprite.vframes = 4
-			sprite.scale = Vector2(float(TILE_SIZE) / 64.0, float(TILE_SIZE) / 64.0)
+			sprite.scale = Vector2(48.0 / 64.0, 48.0 / 64.0)
 		else:
 			var fallback := Image.create(20, 20, false, Image.FORMAT_RGBA8)
 			fallback.fill(Color(0.2, 0.8, 1.0))
@@ -49,6 +50,10 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
+	if _fire_cooldown > 0.0:
+		_fire_cooldown -= delta
+	if Input.is_action_just_pressed("fire_spell") and _fire_cooldown <= 0.0 and GameManager.can_fire_spell():
+		_fire_spell()
 	_read_input()
 	if is_moving:
 		_move_toward_target(delta)
@@ -105,8 +110,8 @@ func _move_toward_target(delta: float) -> void:
 		is_moving = false
 	else:
 		position += move_vec
-	position.x = clampf(position.x, 16.0, 880.0)
-	position.y = clampf(position.y, 16.0, 976.0)
+	position.x = clampf(position.x, 24.0, 1320.0)
+	position.y = clampf(position.y, 24.0, 1464.0)
 
 
 func _can_move(direction: Vector2) -> bool:
@@ -119,6 +124,7 @@ func hit_by_ghost() -> void:
 	if not is_alive:
 		return
 	is_alive = false
+	AudioManager.play_player_death()
 	_spawn_death_particles()
 	died.emit()
 
@@ -140,6 +146,18 @@ func _spawn_death_particles() -> void:
 	add_child(particles)
 	var timer := get_tree().create_timer(0.6)
 	timer.timeout.connect(particles.queue_free)
+
+
+func _fire_spell() -> void:
+	_fire_cooldown = 0.4
+	GameManager.spend_mana(10.0)
+	AudioManager.play_spell_fire()
+	var ProjScript := load("res://scripts/SpellProjectile.gd")
+	var proj: Area2D = ProjScript.new()
+	proj.direction = current_direction if current_direction != Vector2.ZERO else Vector2.RIGHT
+	proj.damage = GameManager.spell_tier + 1
+	proj.position = position
+	get_parent().add_child(proj)
 
 
 func respawn(spawn_pos: Vector2) -> void:

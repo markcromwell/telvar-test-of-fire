@@ -5,6 +5,9 @@ signal restart_pressed
 signal quit_pressed
 
 var _is_paused: bool = false
+var _mana_fill: ColorRect = null
+var _mana_bg: ColorRect = null
+var _mana_label: Label = null
 
 @onready var score_label: Label = $TopBar/ScoreLabel
 @onready var lives_container: HBoxContainer = $TopBar/LivesContainer
@@ -23,6 +26,49 @@ func _ready() -> void:
 	settings_menu.visible = false
 	_update_score(GameManager.score)
 	_update_lives(GameManager.lives)
+	_create_mana_bar()
+	GameManager.mana_changed.connect(_on_mana_changed)
+	_on_mana_changed(GameManager.mana, GameManager.max_mana)
+
+
+func _create_mana_bar() -> void:
+	var bar_w: float = 160.0
+	var bar_h: float = 12.0
+	_mana_bg = ColorRect.new()
+	_mana_bg.size = Vector2(bar_w, bar_h)
+	_mana_bg.color = Color(0.08, 0.08, 0.18)
+	_mana_bg.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_mana_bg.offset_left = -bar_w - 8.0
+	_mana_bg.offset_right = -8.0
+	_mana_bg.offset_top = -bar_h - 28.0
+	_mana_bg.offset_bottom = -28.0
+	add_child(_mana_bg)
+	_mana_fill = ColorRect.new()
+	_mana_fill.size = Vector2(bar_w, bar_h)
+	_mana_fill.color = Color(0.2, 0.4, 1.0)
+	_mana_bg.add_child(_mana_fill)
+	_mana_label = Label.new()
+	_mana_label.text = "MANA"
+	_mana_label.add_theme_font_size_override("font_size", 9)
+	_mana_label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_mana_label.offset_left = -50.0
+	_mana_label.offset_right = -8.0
+	_mana_label.offset_top = -44.0
+	_mana_label.offset_bottom = -28.0
+	add_child(_mana_label)
+
+
+func _on_mana_changed(current: float, max_val: float) -> void:
+	if not _mana_fill or not _mana_bg:
+		return
+	var ratio: float = current / max_val if max_val > 0.0 else 0.0
+	_mana_fill.size.x = _mana_bg.size.x * ratio
+	# Color shifts with spell tier
+	const TIER_COLORS: Array = [Color(0.9, 0.1, 0.1), Color(1.0, 0.5, 0.05),
+		Color(0.9, 0.85, 0.05), Color(0.15, 0.8, 0.15),
+		Color(0.1, 0.3, 1.0), Color(0.45, 0.1, 0.9), Color(0.8, 0.0, 1.0)]
+	var tier: int = clampi(GameManager.spell_tier, 0, 6)
+	_mana_fill.color = TIER_COLORS[tier]
 
 
 func _unhandled_input(event: InputEvent) -> void:

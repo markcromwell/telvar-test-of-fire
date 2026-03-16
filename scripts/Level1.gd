@@ -1,8 +1,17 @@
 extends "res://scripts/LevelBase.gd"
 
 
+func _ready() -> void:
+	level_name = "Alchemical Labs"
+	super._ready()
+
+
 func _get_tileset_path() -> String:
-	return "res://assets/tilesets/level1_alchemical_labs.png"
+	return "res://assets/tilesets/level1_wall.png"
+
+
+func _get_floor_tile_path() -> String:
+	return "res://assets/tilesets/level1_floor.png"
 
 
 func _get_maze_layout() -> PackedStringArray:
@@ -43,3 +52,7 @@ func _get_maze_layout() -> PackedStringArray:
 		"#..........................#",  # 29
 		"############################",  # 30
 	])
+
+
+func _get_floor_tint() -> Color:
+	return Color(1.0, 0.25, 0.1, 1.0)
