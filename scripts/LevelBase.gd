@@ -1,6 +1,6 @@
 extends Node2D
 
-const TILE_SIZE: int = 24
+const TILE_SIZE: int = 32
 const MAZE_WIDTH: int = 28
 const MAZE_HEIGHT: int = 31
 
@@ -10,7 +10,7 @@ const MAZE_HEIGHT: int = 31
 var _player: CharacterBody2D
 var _ghosts: Array[CharacterBody2D] = []
 var _pages_remaining: int = 0
-var _player_spawn: Vector2 = Vector2(324, 564)
+var _player_spawn: Vector2 = Vector2(432, 752)
 var _cached_maze: PackedStringArray = PackedStringArray()
 
 @onready var hud: CanvasLayer = $HUD
@@ -29,8 +29,8 @@ func _ready() -> void:
 
 func _setup_camera() -> void:
 	var cam := Camera2D.new()
-	cam.position = Vector2(336, 372)
-	cam.zoom = Vector2(0.87, 0.87)
+	cam.position = Vector2(448, 496)
+	cam.zoom = Vector2(0.72, 0.72)
 	add_child(cam)
 	cam.make_current()
 

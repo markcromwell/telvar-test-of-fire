@@ -2,14 +2,25 @@ extends CharacterBody2D
 
 signal died
 
-const TILE_SIZE: int = 24
+const TILE_SIZE: int = 32
 const SPEED: float = 120.0
+const ANIM_FPS: float = 8.0
 
-var current_direction: Vector2 = Vector2.ZERO
+# Sheet layout: rows = south/west/east/north, cols = 4 walk frames
+const DIR_ROW: Dictionary = {
+	Vector2.DOWN:  0,
+	Vector2.LEFT:  1,
+	Vector2.RIGHT: 2,
+	Vector2.UP:    3,
+}
+
+var current_direction: Vector2 = Vector2.DOWN
 var queued_direction: Vector2 = Vector2.ZERO
 var target_position: Vector2 = Vector2.ZERO
 var is_moving: bool = false
 var is_alive: bool = true
+var _anim_timer: float = 0.0
+var _anim_frame: int = 0
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var sprite: Sprite2D = $Sprite2D
@@ -23,13 +34,16 @@ func _ready() -> void:
 	collision_mask = 1
 	if sprite and not sprite.texture:
 		var img := Image.new()
-		if img.load("res://assets/sprites/player/telvar_idle.png") == OK:
+		if img.load("res://assets/sprites/player/telvar_walk_sheet.png") == OK:
 			sprite.texture = ImageTexture.create_from_image(img)
+			sprite.hframes = 4
+			sprite.vframes = 4
 			sprite.scale = Vector2(float(TILE_SIZE) / 64.0, float(TILE_SIZE) / 64.0)
 		else:
 			var fallback := Image.create(20, 20, false, Image.FORMAT_RGBA8)
 			fallback.fill(Color(0.2, 0.8, 1.0))
 			sprite.texture = ImageTexture.create_from_image(fallback)
+	_update_sprite_frame()
 
 
 func _physics_process(delta: float) -> void:
@@ -38,8 +52,25 @@ func _physics_process(delta: float) -> void:
 	_read_input()
 	if is_moving:
 		_move_toward_target(delta)
+		_tick_anim(delta)
 	else:
 		_try_move()
+		_anim_frame = 0
+		_update_sprite_frame()
+
+
+func _tick_anim(delta: float) -> void:
+	_anim_timer += delta
+	if _anim_timer >= 1.0 / ANIM_FPS:
+		_anim_timer = 0.0
+		_anim_frame = (_anim_frame + 1) % 4
+		_update_sprite_frame()
+
+
+func _update_sprite_frame() -> void:
+	if sprite and sprite.hframes == 4:
+		var row: int = DIR_ROW.get(current_direction, 0)
+		sprite.frame = row * 4 + _anim_frame
 
 
 func _read_input() -> void:
@@ -74,8 +105,8 @@ func _move_toward_target(delta: float) -> void:
 		is_moving = false
 	else:
 		position += move_vec
-	position.x = clampf(position.x, 12.0, 660.0)
-	position.y = clampf(position.y, 12.0, 732.0)
+	position.x = clampf(position.x, 16.0, 880.0)
+	position.y = clampf(position.y, 16.0, 976.0)
 
 
 func _can_move(direction: Vector2) -> bool:
@@ -114,8 +145,10 @@ func _spawn_death_particles() -> void:
 func respawn(spawn_pos: Vector2) -> void:
 	position = spawn_pos
 	target_position = spawn_pos
-	current_direction = Vector2.ZERO
+	current_direction = Vector2.DOWN
 	queued_direction = Vector2.ZERO
 	is_moving = false
 	is_alive = true
 	modulate.a = 1.0
+	_anim_frame = 0
+	_update_sprite_frame()
