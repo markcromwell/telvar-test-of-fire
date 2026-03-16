@@ -68,9 +68,9 @@ func _clear_level() -> void:
 func _on_level_completed(level_num: int) -> void:
 	var next_level: int = level_num + 1
 	if next_level > GameManager.LEVEL_COUNT:
-		_show_ending()
+		call_deferred("_show_ending")
 	else:
-		_load_level(next_level)
+		call_deferred("_load_level", next_level)
 
 
 func _on_game_over() -> void:
