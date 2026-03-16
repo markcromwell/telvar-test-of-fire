@@ -64,10 +64,10 @@ func _process(delta: float) -> void:
 		if _ghost_radar_timer <= 0.0:
 			ghost_radar_ended.emit()
 	if is_game_active and mana < max_mana:
+		mana = minf(mana + max_mana / 60.0 * delta, max_mana)
 		_mana_regen_timer += delta
-		if _mana_regen_timer >= 30.0:
+		if _mana_regen_timer >= 0.1:
 			_mana_regen_timer = 0.0
-			mana = minf(mana + 10.0, max_mana)
 			mana_changed.emit(mana, max_mana)
 
 
@@ -188,7 +188,6 @@ func can_fire_spell() -> bool:
 
 func spend_mana(amount: float) -> void:
 	mana = maxf(mana - amount, 0.0)
-	_mana_regen_timer = 0.0
 	mana_changed.emit(mana, max_mana)
 
 

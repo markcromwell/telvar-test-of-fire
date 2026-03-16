@@ -116,11 +116,6 @@ func play_sphere_pickup() -> void:
 func play_sfx(pitch_scale: float = 1.0) -> void:
 	_play(_beep(700.0 * pitch_scale, 0.07, 0.005, 0.3), -11.0)
 
-func play_music() -> void:
-	pass
-
-func stop_music() -> void:
-	pass
 
 func play_game_start() -> void:
 	pass
