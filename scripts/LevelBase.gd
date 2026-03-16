@@ -51,6 +51,8 @@ func _physics_process(_delta: float) -> void:
 		return
 	if not _player.is_alive:
 		return
+	if _player.get("is_invulnerable"):
+		return
 	for ghost in _ghosts:
 		if not is_instance_valid(ghost):
 			continue

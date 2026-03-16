@@ -19,6 +19,8 @@ var queued_direction: Vector2 = Vector2.ZERO
 var target_position: Vector2 = Vector2.ZERO
 var is_moving: bool = false
 var is_alive: bool = true
+var is_invulnerable: bool = false  # true during post-respawn grace window
+var _invuln_timer: float = 0.0
 var _fire_cooldown: float = 0.0
 var _anim_timer: float = 0.0
 var _anim_frame: int = 0
@@ -50,6 +52,11 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
+	if _invuln_timer > 0.0:
+		_invuln_timer -= delta
+		if _invuln_timer <= 0.0:
+			is_invulnerable = false
+			modulate.a = 1.0
 	if _fire_cooldown > 0.0:
 		_fire_cooldown -= delta
 	if Input.is_action_just_pressed("fire_spell") and _fire_cooldown <= 0.0 and GameManager.can_fire_spell():
@@ -225,6 +232,8 @@ func respawn(spawn_pos: Vector2) -> void:
 	queued_direction = Vector2.ZERO
 	is_moving = false
 	is_alive = true
-	modulate.a = 1.0
+	is_invulnerable = true
+	_invuln_timer = 2.5  # 2.5s grace after respawn — ghosts can't kill
+	modulate.a = 0.5     # visual cue: semi-transparent while invulnerable
 	_anim_frame = 0
 	_update_sprite_frame()
