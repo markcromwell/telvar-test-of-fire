@@ -28,11 +28,54 @@ func _next_player() -> AudioStreamPlayer:
 	return p
 
 
+func _load_wav_raw(path: String) -> AudioStreamWAV:
+	# Parse a PCM WAV file directly from disk — bypasses Godot's import/compress system
+	if not FileAccess.file_exists(path):
+		return null
+	var bytes := FileAccess.get_file_as_bytes(path)
+	if bytes.size() < 44:
+		return null
+	# Walk chunks to find fmt and data
+	var channels: int = 1
+	var sample_rate: int = 22050
+	var bits_per_sample: int = 16
+	var pcm_data := PackedByteArray()
+	var pos: int = 12  # skip "RIFF....WAVE"
+	while pos + 8 <= bytes.size():
+		var tag: String = bytes.slice(pos, pos + 4).get_string_from_ascii()
+		var chunk_sz: int = bytes.decode_u32(pos + 4)
+		pos += 8
+		if tag == "fmt ":
+			var fmt: int = bytes.decode_u16(pos)  # 1 = PCM
+			if fmt != 1:
+				return null  # not PCM
+			channels = bytes.decode_u16(pos + 2)
+			sample_rate = bytes.decode_u32(pos + 4)
+			bits_per_sample = bytes.decode_u16(pos + 14)
+		elif tag == "data":
+			pcm_data = bytes.slice(pos, pos + chunk_sz)
+			break
+		pos += chunk_sz
+	if pcm_data.size() == 0:
+		return null
+	var wav := AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_16_BITS if bits_per_sample == 16 else AudioStreamWAV.FORMAT_8_BITS
+	wav.mix_rate = sample_rate
+	wav.stereo = channels == 2
+	wav.data = pcm_data
+	return wav
+
+
 func _play_file(path: String, vol_db: float = -8.0) -> void:
 	if not sfx_enabled:
 		return
-	var stream := load(path) as AudioStream
+	var stream: AudioStream = null
+	if path.ends_with(".wav"):
+		stream = _load_wav_raw(path)
+	else:
+		stream = load(path) as AudioStream
 	if not stream:
+		push_warning("AudioManager: failed to load " + path)
 		return
 	var p := _next_player()
 	p.stream = stream
@@ -69,7 +112,7 @@ func play_level_complete() -> void:
 func play_game_over() -> void:
 	_play_file("res://assets/audio/sfx/game_over.wav", -4.0)
 
-func play_sfx(pitch_scale: float = 1.0) -> void:
+func play_sfx(_pitch_scale: float = 1.0) -> void:
 	_play_file("res://assets/audio/sfx/ui_click.wav", -11.0)
 
 func play_banish_mode() -> void:
@@ -173,12 +216,22 @@ func play_music() -> void:
 	if not _music_player or _music_player.playing:
 		return
 	_music_enabled = true
-	var stream := load("res://assets/audio/music/main_theme.ogg") as AudioStreamOggVorbis
-	if stream:
-		stream.loop = true
-		_music_player.stream = stream
-		_music_player.volume_db = -10.0
-		_music_player.play()
+	var ogg_path := "res://assets/audio/music/main_theme.ogg"
+	var stream: AudioStream = load(ogg_path) as AudioStream
+	if not stream:
+		# Import not ready — load raw bytes directly (bypasses import system)
+		if FileAccess.file_exists(ogg_path):
+			var bytes := FileAccess.get_file_as_bytes(ogg_path)
+			if bytes.size() > 0:
+				stream = AudioStreamOggVorbis.load_from_buffer(bytes)
+	if not stream:
+		push_warning("AudioManager: could not load main_theme.ogg")
+		return
+	if stream is AudioStreamOggVorbis:
+		(stream as AudioStreamOggVorbis).loop = true
+	_music_player.stream = stream
+	_music_player.volume_db = -10.0
+	_music_player.play()
 
 
 func stop_music() -> void:

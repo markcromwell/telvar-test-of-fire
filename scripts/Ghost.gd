@@ -7,6 +7,7 @@ enum State { SCATTER, CHASE, FRIGHTENED, EATEN }
 
 @export var ghost_type: GhostType = GhostType.AEMON
 @export var is_hunter: bool = false
+@export var detection_range: float = 0.0  # 0 = use type default, set in _configure_type
 
 const TILE_SIZE: int = 48
 const BASE_SPEED: float = 90.0
@@ -57,11 +58,20 @@ func _ready() -> void:
 	collision_layer = 4
 	collision_mask = 1
 	_state_timer = SCATTER_TIME
-	_health = GameManager.current_level * 2
+	_health = _get_hp()
 	if is_hunter:
 		current_state = State.CHASE
 		_state_timer = 9999.0
 	_configure_type()
+
+
+func _get_hp() -> int:
+	var base: int = GameManager.current_level * 2
+	match ghost_type:
+		GhostType.ABYSSAL:  return maxi(1, int(base * 0.5))   # squishy
+		GhostType.UNDEAD:   return int(base * 2.0)             # tanky
+		GhostType.HOUND:    return maxi(1, int(base * 0.75))   # fast but fragile
+		_:                  return base
 
 
 const GHOST_SHEET_PATHS: Dictionary = {
@@ -82,16 +92,21 @@ func _configure_type() -> void:
 		return
 	match ghost_type:
 		GhostType.AEMON:
-			_speed = BASE_SPEED * 1.1
+			_speed = BASE_SPEED * 1.15       # fast, aggressive
+			if detection_range == 0.0: detection_range = 336.0   # 7 tiles
 		GhostType.ABYSSAL:
-			_speed = BASE_SPEED
+			_speed = BASE_SPEED * 0.9        # slightly slow, squishy
+			if detection_range == 0.0: detection_range = 288.0   # 6 tiles
 		GhostType.UNDEAD:
-			_speed = BASE_SPEED * 0.8
+			_speed = BASE_SPEED * 0.65       # shambling — slow but tanky
+			if detection_range == 0.0: detection_range = 240.0   # 5 tiles
 		GhostType.ELEMENTAL:
-			_speed = BASE_SPEED * 0.9
+			_speed = BASE_SPEED * 1.05       # moderate, invulnerable
 			_is_invulnerable = true
+			if detection_range == 0.0: detection_range = 96.0    # 2 tiles — very short
 		GhostType.HOUND:
-			_speed = BASE_SPEED * 1.2
+			_speed = BASE_SPEED * 1.45       # fastest — sprinter
+			if detection_range == 0.0: detection_range = 432.0   # 9 tiles — nose for prey
 	if sprite:
 		var path: String = GHOST_SHEET_PATHS.get(int(ghost_type), "")
 		var loaded := false
@@ -225,6 +240,10 @@ func _get_bfs_target() -> Vector2:
 	var player := get_tree().get_first_node_in_group("player")
 	if not player:
 		return Vector2.ZERO
+	# Proximity override: if player is within detection range, go straight for them
+	if detection_range > 0.0 and current_state != State.FRIGHTENED and current_state != State.EATEN:
+		if position.distance_to(player.global_position) <= detection_range:
+			return player.global_position
 	match current_state:
 		State.SCATTER:
 			return SCATTER_TARGETS.get(int(ghost_type), home_position)
@@ -288,7 +307,7 @@ func exit_frightened() -> void:
 	_state_timer = SCATTER_TIME
 	_speed = BASE_SPEED
 	_flash_timer = 0.0
-	_health = GameManager.current_level * 2
+	_health = _get_hp()
 	_configure_type()
 
 
@@ -310,7 +329,7 @@ func _respawn() -> void:
 	AudioManager.play_ghost_respawn()
 	position = home_position
 	target_position = home_position
-	_health = GameManager.current_level * 2
+	_health = _get_hp()
 	current_state = State.SCATTER
 	_state_timer = SCATTER_TIME
 	_speed = BASE_SPEED

@@ -54,6 +54,8 @@ func _physics_process(_delta: float) -> void:
 	for ghost in _ghosts:
 		if not is_instance_valid(ghost):
 			continue
+		if not ghost.visible:  # eaten ghosts are invisible — never deadly
+			continue
 		if _player.position.distance_to(ghost.position) < 14.0:
 			_handle_ghost_contact(ghost)
 
