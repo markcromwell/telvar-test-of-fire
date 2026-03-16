@@ -116,6 +116,8 @@ func _update_sprite_frame() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if current_state == State.EATEN:
+		return
 	_update_state_timer(delta)
 	if current_state == State.FRIGHTENED:
 		_flash_timer += delta
@@ -269,18 +271,28 @@ func exit_frightened() -> void:
 
 
 func get_eaten() -> void:
-	if _is_invulnerable:
+	if _is_invulnerable or current_state == State.EATEN:
 		return
 	current_state = State.EATEN
-	_speed = BASE_SPEED * 2.0
-	if sprite:
-		var img := Image.new()
-		if img.load("res://assets/sprites/ghosts/ghost_eaten.png") == OK:
-			sprite.texture = ImageTexture.create_from_image(img)
-			sprite.hframes = 1
-			sprite.vframes = 1
-			sprite.frame = 0
-			sprite.scale = Vector2(48.0 / 64.0, 48.0 / 64.0)
-			sprite.modulate.a = 0.3
+	is_moving = false
+	collision_layer = 0  # stop blocking player
+	visible = false
 	AudioManager.play_ghost_eaten()
 	eaten.emit()
+	get_tree().create_timer(30.0).timeout.connect(_respawn)
+
+
+func _respawn() -> void:
+	if not is_instance_valid(self):
+		return
+	position = home_position
+	target_position = home_position
+	_health = GameManager.current_level * 2
+	current_state = State.SCATTER
+	_state_timer = SCATTER_TIME
+	_speed = BASE_SPEED
+	_flash_timer = 0.0
+	is_moving = false
+	collision_layer = 4
+	visible = true
+	_configure_type()
