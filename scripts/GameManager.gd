@@ -156,6 +156,7 @@ func lose_life() -> void:
 	lives_changed.emit(lives)
 	if lives <= 0:
 		is_game_active = false
+		AudioManager.play_game_over()
 		game_over.emit()
 
 
@@ -197,6 +198,7 @@ func upgrade_spell_tier() -> void:
 
 
 func complete_level() -> void:
+	AudioManager.play_level_complete()
 	upgrade_spell_tier()
 	var time_bonus: int = int(max(0.0, 240.0 - level_time) * 10.0)
 	add_score(time_bonus)

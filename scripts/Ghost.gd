@@ -51,6 +51,7 @@ var _flash_timer: float = 0.0
 
 
 func _ready() -> void:
+	add_to_group("ghosts")
 	home_position = position
 	target_position = position
 	collision_layer = 4
@@ -306,6 +307,7 @@ func get_eaten() -> void:
 func _respawn() -> void:
 	if not is_instance_valid(self):
 		return
+	AudioManager.play_ghost_respawn()
 	position = home_position
 	target_position = home_position
 	_health = GameManager.current_level * 2
