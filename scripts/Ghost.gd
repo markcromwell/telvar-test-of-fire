@@ -185,7 +185,7 @@ func _move_ghost(delta: float) -> void:
 
 
 func _decide_next_move() -> void:
-	var bfs_dir := _get_bfs_direction()
+	var bfs_dir := _astar_direction()
 	if bfs_dir != Vector2.ZERO:
 		current_direction = bfs_dir
 		target_position = position + bfs_dir * TILE_SIZE
@@ -207,32 +207,68 @@ func _pos_to_tile(pos: Vector2) -> Vector2i:
 	return Vector2i(int(pos.x / TILE_SIZE), int(pos.y / TILE_SIZE))
 
 
-func _get_bfs_direction() -> Vector2:
+func _tile_walkable(tile: Vector2i) -> bool:
+	# Use the nav_grid built from the actual maze — no raycasts, no corner-clipping bugs
+	var grid := GameManager.nav_grid
+	if grid.is_empty():
+		return true  # fallback: assume open if grid not ready
+	if tile.y < 0 or tile.y >= grid.size():
+		return false
+	var row: Array = grid[tile.y]
+	if tile.x < 0 or tile.x >= row.size():
+		return false
+	return bool(row[tile.x])
+
+
+func _astar_direction() -> Vector2:
 	var target := _get_bfs_target()
 	if target == Vector2.ZERO:
 		return Vector2.ZERO
 	var from_tile := _pos_to_tile(position)
-	var to_tile := _pos_to_tile(target)
+	var to_tile   := _pos_to_tile(target)
 	if from_tile == to_tile:
 		return Vector2.ZERO
-	var queue: Array = [[from_tile, Vector2.ZERO]]
-	var visited: Dictionary = {from_tile: true}
-	while queue.size() > 0:
-		var entry: Array = queue.pop_front()
-		var tile: Vector2i = entry[0]
-		var first_step: Vector2 = entry[1]
-		for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+
+	# A* with Manhattan heuristic
+	# open entries: [f, g, tile_x, tile_y, step_x, step_y]
+	var open: Array = []
+	var h0: int = abs(from_tile.x - to_tile.x) + abs(from_tile.y - to_tile.y)
+	open.append([h0, 0, from_tile.x, from_tile.y, 0, 0])
+	var g_score: Dictionary = {from_tile: 0}
+	const DIRS: Array[Vector2i] = [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]
+
+	while open.size() > 0:
+		# Pop lowest f (linear scan — grid is small, this is fine)
+		var best := 0
+		for i in range(1, open.size()):
+			if open[i][0] < open[best][0]:
+				best = i
+		var cur: Array = open[best]
+		open.remove_at(best)
+
+		var tile   := Vector2i(cur[2], cur[3])
+		var step   := Vector2(cur[4], cur[5])
+		var cur_g: int = cur[1]
+
+		if tile == to_tile:
+			return step
+
+		if cur_g > g_score.get(tile, 999999):
+			continue  # stale entry
+
+		for d: Vector2i in DIRS:
 			var next: Vector2i = tile + d
-			if visited.has(next):
+			if not _tile_walkable(next):
 				continue
-			var world_pos := Vector2(next.x * TILE_SIZE + TILE_SIZE * 0.5, next.y * TILE_SIZE + TILE_SIZE * 0.5)
-			if not _is_walkable(world_pos):
+			var new_g: int = cur_g + 1
+			if new_g >= g_score.get(next, 999999):
 				continue
-			var step: Vector2 = Vector2(d.x, d.y) if first_step == Vector2.ZERO else first_step
-			if next == to_tile:
-				return step
-			visited[next] = true
-			queue.append([next, step])
+			g_score[next] = new_g
+			var h: int = abs(next.x - to_tile.x) + abs(next.y - to_tile.y)
+			var sx: float = float(d.x) if step == Vector2.ZERO else step.x
+			var sy: float = float(d.y) if step == Vector2.ZERO else step.y
+			open.append([new_g + h, new_g, next.x, next.y, sx, sy])
+
 	return Vector2.ZERO
 
 
@@ -259,16 +295,8 @@ func _get_bfs_target() -> Vector2:
 	return Vector2.ZERO
 
 
-func _is_walkable(world_pos: Vector2) -> bool:
-	ray_cast.target_position = world_pos - position
-	ray_cast.force_raycast_update()
-	return not ray_cast.is_colliding()
-
-
 func _can_move_dir(direction: Vector2) -> bool:
-	ray_cast.target_position = direction * TILE_SIZE
-	ray_cast.force_raycast_update()
-	return not ray_cast.is_colliding()
+	return _tile_walkable(_pos_to_tile(position + direction * TILE_SIZE))
 
 
 func take_damage(amount: int = 1) -> void:
