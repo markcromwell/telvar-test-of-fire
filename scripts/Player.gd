@@ -39,7 +39,7 @@ func _ready() -> void:
 			sprite.texture = ImageTexture.create_from_image(img)
 			sprite.hframes = 4
 			sprite.vframes = 4
-			sprite.scale = Vector2(48.0 / 128.0, 48.0 / 128.0)
+			sprite.scale = Vector2(64.0 / 128.0, 64.0 / 128.0)
 		else:
 			var fallback := Image.create(20, 20, false, Image.FORMAT_RGBA8)
 			fallback.fill(Color(0.2, 0.8, 1.0))

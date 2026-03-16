@@ -265,7 +265,7 @@ func take_damage(amount: int = 1) -> void:
 
 
 func enter_frightened() -> void:
-	if _is_invulnerable:
+	if _is_invulnerable or current_state == State.EATEN:
 		return
 	current_state = State.FRIGHTENED
 	_speed = BASE_SPEED * 0.5
@@ -277,6 +277,8 @@ func enter_frightened() -> void:
 
 
 func exit_frightened() -> void:
+	if current_state == State.EATEN:
+		return
 	current_state = State.SCATTER
 	_state_timer = SCATTER_TIME
 	_speed = BASE_SPEED
