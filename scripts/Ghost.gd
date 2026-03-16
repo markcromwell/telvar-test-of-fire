@@ -88,29 +88,28 @@ const GHOST_SHEET_PATHS: Dictionary = {
 
 
 func _configure_type() -> void:
+	# Speed: hunters use a fixed multiplier; others get type-specific values
 	if is_hunter:
 		_speed = BASE_SPEED * 1.35
-		# Red outline tint to signal danger
-		if sprite and current_state != State.FRIGHTENED:
-			sprite.modulate = Color(1.0, 0.55, 0.55)
-		return
+	# Detection range and type-specific behaviour (runs for all ghosts)
 	match ghost_type:
 		GhostType.AEMON:
-			_speed = BASE_SPEED * 1.15       # fast, aggressive
+			if not is_hunter: _speed = BASE_SPEED * 1.15
 			if detection_range == 0.0: detection_range = 336.0   # 7 tiles
 		GhostType.ABYSSAL:
-			_speed = BASE_SPEED * 0.9        # slightly slow, squishy
+			if not is_hunter: _speed = BASE_SPEED * 0.9
 			if detection_range == 0.0: detection_range = 288.0   # 6 tiles
 		GhostType.UNDEAD:
-			_speed = BASE_SPEED * 0.65       # shambling — slow but tanky
+			if not is_hunter: _speed = BASE_SPEED * 0.65
 			if detection_range == 0.0: detection_range = 240.0   # 5 tiles
 		GhostType.ELEMENTAL:
-			_speed = BASE_SPEED * 1.05       # moderate, invulnerable
+			if not is_hunter: _speed = BASE_SPEED * 1.05
 			_is_invulnerable = true
-			if detection_range == 0.0: detection_range = 96.0    # 2 tiles — very short
+			if detection_range == 0.0: detection_range = 96.0    # 2 tiles
 		GhostType.HOUND:
-			_speed = BASE_SPEED * 1.45       # fastest — sprinter
-			if detection_range == 0.0: detection_range = 432.0   # 9 tiles — nose for prey
+			if not is_hunter: _speed = BASE_SPEED * 1.45
+			if detection_range == 0.0: detection_range = 432.0   # 9 tiles
+	# Sprite — always load so no ghost is invisible
 	if sprite:
 		var path: String = GHOST_SHEET_PATHS.get(int(ghost_type), "")
 		var loaded := false
@@ -128,6 +127,9 @@ func _configure_type() -> void:
 			fallback.fill(Color.WHITE)
 			sprite.texture = ImageTexture.create_from_image(fallback)
 			sprite.scale = Vector2(1.2, 1.2)
+		# Hunter tint applied after load (overrides WHITE)
+		if is_hunter and current_state != State.FRIGHTENED:
+			sprite.modulate = Color(1.0, 0.55, 0.55)
 	_update_sprite_frame()
 
 
