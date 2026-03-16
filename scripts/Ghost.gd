@@ -45,6 +45,7 @@ var _health: int = 1
 var _anim_timer: float = 0.0
 var _anim_frame: int = 0
 var _flash_timer: float = 0.0
+var _kill_grace: float = 2.0  # cannot kill player during grace period (spawn or respawn)
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -142,6 +143,8 @@ func _update_sprite_frame() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _kill_grace > 0.0:
+		_kill_grace -= delta
 	if current_state == State.EATEN:
 		return
 	_update_state_timer(delta)
@@ -362,6 +365,7 @@ func _respawn() -> void:
 	_state_timer = SCATTER_TIME
 	_speed = BASE_SPEED
 	_flash_timer = 0.0
+	_kill_grace = 2.5  # grace period — won't kill player immediately on respawn
 	is_moving = false
 	collision_layer = 4
 	visible = true

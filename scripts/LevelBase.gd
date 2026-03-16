@@ -54,10 +54,20 @@ func _physics_process(_delta: float) -> void:
 	for ghost in _ghosts:
 		if not is_instance_valid(ghost):
 			continue
-		if not ghost.visible:  # eaten ghosts are invisible — never deadly
+		var state: int = ghost.get("current_state") if ghost.get("current_state") != null else -1
+		var layer: int = ghost.get("collision_layer") if ghost.get("collision_layer") != null else 0
+		var vis: bool = ghost.is_visible_in_tree()
+		var grace: float = ghost.get("_kill_grace") if ghost.get("_kill_grace") != null else 0.0
+		var dist: float = _player.position.distance_to(ghost.position)
+		if dist < 20.0:
+			print("PROX ", ghost.name, " st=", state, " vis=", vis, " layer=", layer, " grace=", snappedf(grace, 0.01), " dist=", snappedf(dist, 0.1))
+		# Quad guard: eaten state, invisible, no collision layer, or in grace period
+		if state == 3 or not vis or layer == 0 or grace > 0.0:
 			continue
-		if _player.position.distance_to(ghost.position) < 14.0:
+		if dist < 14.0:
 			_handle_ghost_contact(ghost)
+			if not _player.is_alive:
+				return
 
 
 func _handle_ghost_contact(ghost: CharacterBody2D) -> void:

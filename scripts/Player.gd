@@ -154,27 +154,45 @@ func _fire_spell() -> void:
 	AudioManager.play_spell_fire()
 	var ProjScript := load("res://scripts/SpellProjectile.gd")
 	var proj: Area2D = ProjScript.new()
-	proj.direction = _get_fire_direction()
+	var fire_dir := _get_fire_direction()
+	proj.direction = fire_dir
 	proj.damage = GameManager.spell_tier + 1
-	proj.position = position
+	proj.position = position + fire_dir * 14.0
 	get_parent().add_child(proj)
+
+
+func _dir_clear(dir: Vector2) -> bool:
+	var grid := GameManager.nav_grid
+	if grid.is_empty():
+		return true
+	var next_tile := Vector2i(
+		int((position.x + dir.x * TILE_SIZE) / TILE_SIZE),
+		int((position.y + dir.y * TILE_SIZE) / TILE_SIZE)
+	)
+	if next_tile.y < 0 or next_tile.y >= grid.size():
+		return false
+	var row: Array = grid[next_tile.y]
+	if next_tile.x < 0 or next_tile.x >= row.size():
+		return false
+	return bool(row[next_tile.x])
 
 
 func _get_fire_direction() -> Vector2:
 	const AIM_RANGE: float = 336.0  # 7 tiles
 	var ghosts := get_tree().get_nodes_in_group("ghosts")
 	var dirs: Array[Vector2] = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
-	# Facing direction takes priority — if a ghost is ahead, fire as normal
+	# Facing direction takes priority — if a ghost is ahead and path is clear, fire as normal
 	var facing: Vector2 = current_direction if current_direction != Vector2.ZERO else Vector2.RIGHT
-	for ghost in ghosts:
-		if not is_instance_valid(ghost):
-			continue
-		if ghost.get("current_state") == 3:  # State.EATEN — skip invisible ghosts
-			continue
-		var diff: Vector2 = ghost.global_position - global_position
-		if diff.length() < AIM_RANGE and diff.normalized().dot(facing) > 0.7:
-			return facing
-	# No ghost ahead — snap to nearest ghost in any cardinal direction
+	if _dir_clear(facing):
+		for ghost in ghosts:
+			if not is_instance_valid(ghost):
+				continue
+			if ghost.get("current_state") == 3:  # State.EATEN — skip invisible ghosts
+				continue
+			var diff: Vector2 = ghost.global_position - global_position
+			if diff.length() < AIM_RANGE and diff.normalized().dot(facing) > 0.7:
+				return facing
+	# No ghost ahead (or wall in the way) — snap to nearest ghost in any open cardinal direction
 	var best_dir: Vector2 = facing
 	var best_dist: float = AIM_RANGE + 1.0
 	for ghost in ghosts:
@@ -188,10 +206,15 @@ func _get_fire_direction() -> Vector2:
 			continue
 		var norm: Vector2 = diff.normalized()
 		for d: Vector2 in dirs:
-			if norm.dot(d) > 0.7:
+			if norm.dot(d) > 0.7 and _dir_clear(d):
 				best_dist = dist
 				best_dir = d
 				break
+	# Fallback: if best_dir is blocked, use any open direction
+	if not _dir_clear(best_dir):
+		for d: Vector2 in dirs:
+			if _dir_clear(d):
+				return d
 	return best_dir
 
 
