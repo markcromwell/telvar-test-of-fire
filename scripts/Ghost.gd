@@ -25,8 +25,8 @@ const DIR_ROW: Dictionary = {
 
 # Scatter corner targets (tile centres): each ghost heads to a fixed maze corner
 # Maze is 28x31 tiles at 32px. Formula: col*32+16, row*32+16
-# Central ghost house — all ghosts respawn here
-const GHOST_HOUSE: Vector2 = Vector2(672, 696)
+# Central ghost house — all ghosts respawn here (tile col 14, row 14 centre)
+const GHOST_HOUSE: Vector2 = Vector2(696, 696)
 
 const SCATTER_TARGETS: Dictionary = {
 	0: Vector2(1272, 72),  # AEMON     — top-right
@@ -55,8 +55,17 @@ var _kill_grace: float = 2.0  # cannot kill player during grace period (spawn or
 @onready var ray_cast: RayCast2D = $RayCast2D
 
 
+func _snap_to_tile_center() -> void:
+	# Ensure position is exactly at a tile centre to prevent wall-clipping drift
+	var tx: int = int(position.x / TILE_SIZE)
+	var ty: int = int(position.y / TILE_SIZE)
+	position = Vector2(tx * TILE_SIZE + TILE_SIZE * 0.5, ty * TILE_SIZE + TILE_SIZE * 0.5)
+	target_position = position
+
+
 func _ready() -> void:
 	add_to_group("ghosts")
+	_snap_to_tile_center()
 	home_position = position
 	target_position = position
 	collision_layer = 4
@@ -364,7 +373,7 @@ func _respawn() -> void:
 		return
 	AudioManager.play_ghost_respawn()
 	position = GHOST_HOUSE
-	target_position = GHOST_HOUSE
+	_snap_to_tile_center()
 	_health = _get_hp()
 	current_state = State.SCATTER
 	_state_timer = SCATTER_TIME
