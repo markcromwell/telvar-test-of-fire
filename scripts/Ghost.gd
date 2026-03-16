@@ -25,6 +25,9 @@ const DIR_ROW: Dictionary = {
 
 # Scatter corner targets (tile centres): each ghost heads to a fixed maze corner
 # Maze is 28x31 tiles at 32px. Formula: col*32+16, row*32+16
+# Central ghost house — all ghosts respawn here
+const GHOST_HOUSE: Vector2 = Vector2(672, 696)
+
 const SCATTER_TARGETS: Dictionary = {
 	0: Vector2(1272, 72),  # AEMON     — top-right
 	1: Vector2(72, 72),    # ABYSSAL   — top-left
@@ -358,8 +361,8 @@ func _respawn() -> void:
 	if not is_instance_valid(self):
 		return
 	AudioManager.play_ghost_respawn()
-	position = home_position
-	target_position = home_position
+	position = GHOST_HOUSE
+	target_position = GHOST_HOUSE
 	_health = _get_hp()
 	current_state = State.SCATTER
 	_state_timer = SCATTER_TIME
