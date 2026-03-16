@@ -143,8 +143,19 @@ func play_ghost_hit() -> void:
 
 
 func play_spell_ineffective() -> void:
-	# Flat low thud — spell bounced off, no effect
-	_play(_sweep(140.0, 90.0, 0.18, 0.5), -8.0)
+	# Metallic armor clank — inharmonic ring layers
+	var p1 := _next_player()
+	p1.stream = _beep(980.0, 0.22, 0.003, 0.7)   # sharp high ring
+	p1.volume_db = -5.0
+	p1.play()
+	var p2 := _next_player()
+	p2.stream = _beep(1470.0, 0.16, 0.003, 0.5)  # inharmonic overtone
+	p2.volume_db = -8.0
+	p2.play()
+	var p3 := _next_player()
+	p3.stream = _beep(340.0, 0.14, 0.004, 0.6)   # low body thud
+	p3.volume_db = -7.0
+	p3.play()
 
 func play_gem_explode() -> void:
 	# Deep descending boom for tower gem destruction
