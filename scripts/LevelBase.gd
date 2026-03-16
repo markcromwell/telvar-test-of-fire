@@ -36,7 +36,10 @@ func _setup_camera() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and event.keycode == KEY_X:
+	if not (event is InputEventKey and event.pressed):
+		return
+	# X — collect all spell pages instantly
+	if event.keycode == KEY_X:
 		var pages := get_node_or_null("SpellPages")
 		if pages:
 			for page in pages.get_children():
@@ -44,6 +47,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		var needed: int = GameManager.TOTAL_SPELL_PAGES - GameManager.spell_pages_collected
 		for i in needed:
 			GameManager.collect_spell_page("DEBUG")
+	# 1-7 — jump directly to that level
+	const JUMP_KEYS: Array[int] = [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7]
+	var idx: int = JUMP_KEYS.find(event.keycode)
+	if idx >= 0:
+		var target: int = idx + 1
+		print("DEBUG: jumping to level ", target)
+		GameManager.start_level(target)
+		get_tree().change_scene_to_file("res://scenes/Level%d.tscn" % target)
 
 
 func _physics_process(_delta: float) -> void:
