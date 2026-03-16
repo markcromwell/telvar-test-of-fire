@@ -6,6 +6,7 @@ enum GhostType { AEMON, ABYSSAL, UNDEAD, ELEMENTAL, HOUND }
 enum State { SCATTER, CHASE, FRIGHTENED, EATEN }
 
 @export var ghost_type: GhostType = GhostType.AEMON
+@export var is_hunter: bool = false
 
 const TILE_SIZE: int = 48
 const BASE_SPEED: float = 90.0
@@ -56,6 +57,9 @@ func _ready() -> void:
 	collision_mask = 1
 	_state_timer = SCATTER_TIME
 	_health = GameManager.current_level * 2
+	if is_hunter:
+		current_state = State.CHASE
+		_state_timer = 9999.0
 	_configure_type()
 
 
@@ -69,6 +73,12 @@ const GHOST_SHEET_PATHS: Dictionary = {
 
 
 func _configure_type() -> void:
+	if is_hunter:
+		_speed = BASE_SPEED * 1.35
+		# Red outline tint to signal danger
+		if sprite and current_state != State.FRIGHTENED:
+			sprite.modulate = Color(1.0, 0.55, 0.55)
+		return
 	match ghost_type:
 		GhostType.AEMON:
 			_speed = BASE_SPEED * 1.1
@@ -135,6 +145,9 @@ func _physics_process(delta: float) -> void:
 
 func _update_state_timer(delta: float) -> void:
 	if current_state == State.FRIGHTENED or current_state == State.EATEN:
+		return
+	if is_hunter:
+		current_state = State.CHASE
 		return
 	_state_timer -= delta
 	if _state_timer <= 0.0:
@@ -215,6 +228,8 @@ func _get_bfs_target() -> Vector2:
 		State.SCATTER:
 			return SCATTER_TARGETS.get(int(ghost_type), home_position)
 		State.CHASE:
+			if is_hunter:
+				return player.global_position
 			return player.global_position + player.get("current_direction") * TILE_SIZE * 4
 		State.FRIGHTENED:
 			var away: Vector2 = position - player.global_position

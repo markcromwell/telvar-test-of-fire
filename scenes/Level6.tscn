@@ -73,6 +73,7 @@ collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_ghost")
 ghost_type = 0
+is_hunter = true
 
 [node name="Sprite2D" type="Sprite2D" parent="Ghosts/AemonGuardian"]
 
