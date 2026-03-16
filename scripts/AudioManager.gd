@@ -136,6 +136,16 @@ func set_music_volume(_vol: float) -> void:
 	pass
 
 
+
+func play_ghost_hit() -> void:
+	# Sharp mid-pitch crack — damage landed
+	_play(_sweep(520.0, 180.0, 0.12, 0.55), -10.0)
+
+
+func play_spell_ineffective() -> void:
+	# Flat low thud — spell bounced off, no effect
+	_play(_sweep(140.0, 90.0, 0.18, 0.5), -8.0)
+
 func play_gem_explode() -> void:
 	# Deep descending boom for tower gem destruction
 	var p1 := _next_player()

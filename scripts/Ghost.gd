@@ -252,9 +252,13 @@ func _can_move_dir(direction: Vector2) -> bool:
 
 
 func take_damage(amount: int = 1) -> void:
-	if _is_invulnerable or current_state == State.EATEN:
+	if current_state == State.EATEN:
+		return
+	if _is_invulnerable:
+		AudioManager.play_spell_ineffective()
 		return
 	_health -= amount
+	AudioManager.play_ghost_hit()
 	if _health <= 0:
 		get_eaten()
 	else:
