@@ -316,6 +316,10 @@ func _can_move_dir(direction: Vector2) -> bool:
 	return _tile_walkable(_pos_to_tile(position + direction * TILE_SIZE))
 
 
+func set_speed(speed: float) -> void:
+	_speed = speed
+
+
 func take_damage(amount: int = 1) -> void:
 	if current_state == State.EATEN:
 		return

@@ -9,7 +9,6 @@ const MAZE_HEIGHT: int = 31
 
 var _player: CharacterBody2D
 var _ghosts: Array[CharacterBody2D] = []
-var _pages_remaining: int = 0
 var _player_spawn: Vector2 = Vector2(648, 1128)
 var _cached_maze: PackedStringArray = PackedStringArray()
 
@@ -339,9 +338,6 @@ func _setup_level() -> void:
 			if ghost:
 				_ghosts.append(ghost)
 				ghost.eaten.connect(_on_ghost_eaten)
-	var page_container := get_node_or_null("SpellPages")
-	if page_container:
-		_pages_remaining = page_container.get_child_count()
 
 
 func _on_player_died() -> void:

@@ -156,7 +156,7 @@ func _on_settings_back() -> void:
 
 func _on_lore_continue() -> void:
 	_tween_hide(lore_popup)
-	get_tree().paused = false
+	get_tree().paused = _is_paused  # restore actual pause state, not always false
 
 
 func _tween_show(control: Control) -> void:
