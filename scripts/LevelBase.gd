@@ -67,8 +67,12 @@ func _get_maze_layout() -> PackedStringArray:
 	return PackedStringArray()
 
 
-func _get_floor_tint() -> Color:
-	return Color(0.3, 0.3, 0.8)
+func _get_wall_texture_path() -> String:
+	return "res://assets/tilesets/level1_wall.png"
+
+
+func _get_floor_texture_path() -> String:
+	return "res://assets/tilesets/level1_floor.png"
 
 
 func _build_maze_geometry() -> void:
@@ -79,40 +83,65 @@ func _build_maze_geometry() -> void:
 	var old_walls := get_node_or_null("MazeWalls")
 	if old_walls:
 		old_walls.queue_free()
-	# Floor background
-	var tint := _get_floor_tint()
-	var bg := ColorRect.new()
-	bg.color = Color(tint.r * 0.12, tint.g * 0.12, tint.b * 0.12)
-	bg.size = Vector2(MAZE_WIDTH * TILE_SIZE, MAZE_HEIGHT * TILE_SIZE)
-	bg.z_index = -10
-	add_child(bg)
-	# Single StaticBody2D with per-cell collision shapes (efficient in Godot 4)
+	# Load textures (fall back to Color if missing)
+	var wall_tex: Texture2D = load(_get_wall_texture_path())
+	var floor_tex: Texture2D = load(_get_floor_texture_path())
+	# Draw floor tiles for every non-wall cell
+	var half: float = TILE_SIZE * 0.5
+	for row in range(layout.size()):
+		var row_str: String = layout[row]
+		for col in range(row_str.length()):
+			if row_str[col] == "#":
+				continue
+			if floor_tex:
+				var tr := TextureRect.new()
+				tr.texture = floor_tex
+				tr.stretch_mode = TextureRect.STRETCH_SCALE
+				tr.size = Vector2(TILE_SIZE, TILE_SIZE)
+				tr.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
+				tr.z_index = -10
+				add_child(tr)
+			else:
+				var bg := ColorRect.new()
+				bg.color = Color(0.06, 0.05, 0.04)
+				bg.size = Vector2(TILE_SIZE, TILE_SIZE)
+				bg.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
+				bg.z_index = -10
+				add_child(bg)
+	# Single StaticBody2D with per-cell collision shapes
 	var wall_body := StaticBody2D.new()
 	wall_body.name = "MazeWallBody"
 	wall_body.collision_layer = 1
 	wall_body.collision_mask = 0
 	add_child(wall_body)
-	var wall_color := tint.lerp(Color(0.1, 0.1, 0.2), 0.55)
-	var half: float = TILE_SIZE * 0.5
 	for row in range(layout.size()):
 		var row_str: String = layout[row]
 		for col in range(row_str.length()):
 			if row_str[col] != "#":
 				continue
-			# Collision
+			# Collision shape
 			var shape_node := CollisionShape2D.new()
 			var rect := RectangleShape2D.new()
 			rect.size = Vector2(TILE_SIZE, TILE_SIZE)
 			shape_node.shape = rect
 			shape_node.position = Vector2(col * TILE_SIZE + half, row * TILE_SIZE + half)
 			wall_body.add_child(shape_node)
-			# Visual
-			var vis := ColorRect.new()
-			vis.color = wall_color
-			vis.size = Vector2(TILE_SIZE, TILE_SIZE)
-			vis.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
-			vis.z_index = -5
-			add_child(vis)
+			# Wall visual tile
+			if wall_tex:
+				var tr := TextureRect.new()
+				tr.texture = wall_tex
+				tr.stretch_mode = TextureRect.STRETCH_SCALE
+				tr.size = Vector2(TILE_SIZE, TILE_SIZE)
+				tr.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
+				tr.z_index = -5
+				add_child(tr)
+			else:
+				var vis := ColorRect.new()
+				vis.color = Color(0.18, 0.15, 0.12)
+				vis.size = Vector2(TILE_SIZE, TILE_SIZE)
+				vis.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
+				vis.z_index = -5
+				add_child(vis)
 
 
 func _resolve_maze() -> Dictionary:

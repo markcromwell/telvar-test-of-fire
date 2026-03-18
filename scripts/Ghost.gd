@@ -15,7 +15,7 @@ const GHOST_DISPLAY_NAMES: Dictionary = {
 
 @export var ghost_type: GhostType = GhostType.AEMON
 
-const TILE_SIZE: int = 24
+const TILE_SIZE: int = 48
 const BASE_SPEED: float = 90.0
 const SCATTER_TIME: float = 7.0
 const CHASE_TIME: float = 20.0
@@ -44,6 +44,11 @@ var _has_howled: bool = false
 
 # Elemental: persistent cyan aura node
 var _aura_particles: CPUParticles2D = null
+
+# Animation
+const ANIM_FPS: float = 8.0
+var _anim_timer: float = 0.0
+var _anim_col: int = 0  # 0-3, cycles through walk frames
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -115,12 +120,32 @@ func _physics_process(delta: float) -> void:
 	_update_abyssal_flee(delta)
 	_update_undead_stagger(delta)
 	_check_hound_howl()
+	_update_animation(delta)
 	if _stagger_timer > 0.0:
 		return
 	if is_moving:
 		_move_ghost(delta)
 	else:
 		_choose_next_direction()
+
+
+func _update_animation(delta: float) -> void:
+	if not sprite or not sprite.texture:
+		return
+	_anim_timer += delta
+	if _anim_timer < 1.0 / ANIM_FPS:
+		return
+	_anim_timer -= 1.0 / ANIM_FPS
+	_anim_col = (_anim_col + 1) % 4
+	# Row = direction: 0=down 1=left 2=right 3=up
+	var dir_row: int = 0
+	if current_direction == Vector2.LEFT:
+		dir_row = 1
+	elif current_direction == Vector2.RIGHT:
+		dir_row = 2
+	elif current_direction == Vector2.UP:
+		dir_row = 3
+	sprite.frame = dir_row * sprite.hframes + _anim_col
 
 
 func _update_abyssal_flee(delta: float) -> void:

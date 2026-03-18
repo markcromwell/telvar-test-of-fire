@@ -8,6 +8,9 @@ const SPELL_COOLDOWN: float = 0.3
 
 var current_direction: Vector2 = Vector2.ZERO
 var queued_direction: Vector2 = Vector2.ZERO
+var _anim_timer: float = 0.0
+var _anim_col: int = 0
+const ANIM_FPS: float = 8.0
 var target_position: Vector2 = Vector2.ZERO
 var is_moving: bool = false
 var is_alive: bool = true
@@ -23,7 +26,10 @@ func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
 	if sprite:
-		sprite.texture = load("res://assets/sprites/player/telvar_idle_128.png")
+		sprite.texture = load("res://assets/sprites/player/telvar_walk_sheet.png")
+		sprite.hframes = 4
+		sprite.vframes = 4
+		sprite.frame = 0
 
 
 func _physics_process(delta: float) -> void:
@@ -34,8 +40,27 @@ func _physics_process(delta: float) -> void:
 	_read_input()
 	if is_moving:
 		_move_toward_target(delta)
+		_update_animation(delta)
 	else:
 		_try_move()
+
+
+func _update_animation(delta: float) -> void:
+	if not sprite or not sprite.texture:
+		return
+	_anim_timer += delta
+	if _anim_timer < 1.0 / ANIM_FPS:
+		return
+	_anim_timer -= 1.0 / ANIM_FPS
+	_anim_col = (_anim_col + 1) % 4
+	var dir_row: int = 0
+	if current_direction == Vector2.LEFT:
+		dir_row = 1
+	elif current_direction == Vector2.RIGHT:
+		dir_row = 2
+	elif current_direction == Vector2.UP:
+		dir_row = 3
+	sprite.frame = dir_row * sprite.hframes + _anim_col
 
 
 func _read_input() -> void:
