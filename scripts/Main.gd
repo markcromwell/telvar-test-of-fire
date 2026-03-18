@@ -134,6 +134,14 @@ func _show_ending() -> void:
 	_tween_alpha(ending_screen, 0.0, 1.0, 0.2)
 
 
+func _on_book1_pressed() -> void:
+	MarketingLinks.open(MarketingLinks.BOOK1_URL)
+
+
+func _on_book3_pressed() -> void:
+	MarketingLinks.open(MarketingLinks.BOOK3_URL)
+
+
 func _on_ending_continue() -> void:
 	_tween_alpha(ending_screen, 1.0, 0.0, 0.2)
 	var tween := create_tween()

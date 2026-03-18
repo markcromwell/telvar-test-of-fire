@@ -60,7 +60,7 @@ func _on_credits() -> void:
 
 
 func _on_preorder() -> void:
-	OS.shell_open(PRE_ORDER_URL)
+	MarketingLinks.open(PRE_ORDER_URL)
 
 
 func _close_how_to_play() -> void:

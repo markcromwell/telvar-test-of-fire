@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/SettingsPanel.gd" id="2_settings"]
+[ext_resource type="Script" path="res://scripts/TitleScreen.gd" id="3_title"]
+[ext_resource type="Script" path="res://scripts/EndScreen.gd" id="4_ending"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
@@ -12,6 +14,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("3_title")
 
 [node name="Background" type="ColorRect" parent="TitleScreen"]
 layout_mode = 1
@@ -42,6 +45,20 @@ offset_top = 220.0
 offset_right = 150.0
 offset_bottom = 260.0
 text = "HIGH SCORE: 0"
+horizontal_alignment = 1
+
+[node name="CreditLine" type="Label" parent="TitleScreen"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -40.0
+offset_right = 300.0
+offset_bottom = 0.0
+text = "Based on the New Paladin Order series by Kenneth & Charles Cromwell"
 horizontal_alignment = 1
 
 [node name="StartButton" type="Button" parent="TitleScreen"]
@@ -142,6 +159,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("4_ending")
 
 [node name="Background" type="ColorRect" parent="EndingScreen"]
 layout_mode = 1
@@ -191,19 +209,45 @@ offset_bottom = 100.0
 text = "FINAL SCORE: 0"
 horizontal_alignment = 1
 
-[node name="PreorderLabel" type="Label" parent="EndingScreen"]
+[node name="BookHeadline" type="Label" parent="EndingScreen"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = 110.0
-offset_right = 200.0
+offset_left = -280.0
+offset_top = 100.0
+offset_right = 280.0
 offset_bottom = 150.0
-text = "Pre-order the Medias novel series now!"
+text = "Telvar's story begins here. It doesn't end here."
 horizontal_alignment = 1
+
+[node name="Book1Button" type="Button" parent="EndingScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -170.0
+offset_top = 160.0
+offset_right = -10.0
+offset_bottom = 200.0
+text = "Read Book 1"
+
+[node name="Book3Button" type="Button" parent="EndingScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 10.0
+offset_top = 160.0
+offset_right = 170.0
+offset_bottom = 200.0
+text = "Read Book 3"
 
 [node name="ContinueButton" type="Button" parent="EndingScreen"]
 layout_mode = 1
@@ -213,9 +257,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -80.0
-offset_top = 160.0
+offset_top = 220.0
 offset_right = 80.0
-offset_bottom = 200.0
+offset_bottom = 260.0
 text = "CONTINUE"
 
 [node name="ContinueScreen" type="Control" parent="."]
@@ -287,6 +331,8 @@ text = "NO"
 
 [connection signal="pressed" from="TitleScreen/StartButton" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="TitleScreen/SettingsButton" to="." method="_on_title_settings_pressed"]
+[connection signal="pressed" from="EndingScreen/Book1Button" to="." method="_on_book1_pressed"]
+[connection signal="pressed" from="EndingScreen/Book3Button" to="." method="_on_book3_pressed"]
 [connection signal="pressed" from="EndingScreen/ContinueButton" to="." method="_on_ending_continue"]
 [connection signal="pressed" from="ContinueScreen/YesButton" to="." method="_on_continue_yes"]
 [connection signal="pressed" from="ContinueScreen/NoButton" to="." method="_on_continue_no"]
