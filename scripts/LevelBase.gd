@@ -1,6 +1,6 @@
 extends Node2D
 
-const TILE_SIZE: int = 24
+const TILE_SIZE: int = 48
 const MAZE_WIDTH: int = 28
 const MAZE_HEIGHT: int = 31
 
@@ -63,6 +63,58 @@ func _ready() -> void:
 		hud.quit_pressed.connect(_quit_to_title)
 
 
+func _get_maze_layout() -> PackedStringArray:
+	return PackedStringArray()
+
+
+func _get_floor_tint() -> Color:
+	return Color(0.3, 0.3, 0.8)
+
+
+func _build_maze_geometry() -> void:
+	var layout := _get_maze_layout()
+	if layout.is_empty():
+		return
+	# Remove placeholder outer-wall nodes — the layout replaces them
+	var old_walls := get_node_or_null("MazeWalls")
+	if old_walls:
+		old_walls.queue_free()
+	# Floor background
+	var tint := _get_floor_tint()
+	var bg := ColorRect.new()
+	bg.color = Color(tint.r * 0.12, tint.g * 0.12, tint.b * 0.12)
+	bg.size = Vector2(MAZE_WIDTH * TILE_SIZE, MAZE_HEIGHT * TILE_SIZE)
+	bg.z_index = -10
+	add_child(bg)
+	# Single StaticBody2D with per-cell collision shapes (efficient in Godot 4)
+	var wall_body := StaticBody2D.new()
+	wall_body.name = "MazeWallBody"
+	wall_body.collision_layer = 1
+	wall_body.collision_mask = 0
+	add_child(wall_body)
+	var wall_color := tint.lerp(Color(0.1, 0.1, 0.2), 0.55)
+	var half: float = TILE_SIZE * 0.5
+	for row in range(layout.size()):
+		var row_str: String = layout[row]
+		for col in range(row_str.length()):
+			if row_str[col] != "#":
+				continue
+			# Collision
+			var shape_node := CollisionShape2D.new()
+			var rect := RectangleShape2D.new()
+			rect.size = Vector2(TILE_SIZE, TILE_SIZE)
+			shape_node.shape = rect
+			shape_node.position = Vector2(col * TILE_SIZE + half, row * TILE_SIZE + half)
+			wall_body.add_child(shape_node)
+			# Visual
+			var vis := ColorRect.new()
+			vis.color = wall_color
+			vis.size = Vector2(TILE_SIZE, TILE_SIZE)
+			vis.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
+			vis.z_index = -5
+			add_child(vis)
+
+
 func _resolve_maze() -> Dictionary:
 	if not GameManager.current_maze.is_empty():
 		return GameManager.current_maze
@@ -75,7 +127,20 @@ func _generate_maze() -> Dictionary:
 	return {}
 
 
+func _add_maze_camera() -> void:
+	var cam := Camera2D.new()
+	cam.name = "MazeCamera"
+	cam.position = Vector2(MAZE_WIDTH * TILE_SIZE * 0.5, MAZE_HEIGHT * TILE_SIZE * 0.5)
+	var zoom_x: float = 1280.0 / (MAZE_WIDTH * TILE_SIZE)
+	var zoom_y: float = 720.0 / (MAZE_HEIGHT * TILE_SIZE)
+	var zoom_val: float = minf(zoom_x, zoom_y)
+	cam.zoom = Vector2(zoom_val, zoom_val)
+	add_child(cam)
+
+
 func _setup_level() -> void:
+	_build_maze_geometry()
+	_add_maze_camera()
 	_player = get_node_or_null("Player") as CharacterBody2D
 	if _player:
 		_player.add_to_group("player")

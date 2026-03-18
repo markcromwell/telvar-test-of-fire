@@ -49,7 +49,7 @@ const GHOST_INTRO_TEXTS: Dictionary = {
 	4: "The Hound of Fenrir — loosed only when the overseers want the Trial to end in death.",
 }
 
-const TILE_SIZE: int = 24
+const TILE_SIZE: int = 48
 const MANA_REGEN_FULL_RATE: float = MAX_MANA / 15.0  # per second at full rate
 const MANA_REGEN_MIN_FACTOR: float = 0.3
 const MANA_REGEN_FAR_TILES: float = 5.0
