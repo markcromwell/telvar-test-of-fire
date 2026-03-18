@@ -142,8 +142,12 @@ func _on_body_entered(body: Node2D) -> void:
 
 
 func _apply_damage_to_ghost(ghost: CharacterBody2D) -> void:
-	for i in damage:
-		ghost.get_banished()
+	if ghost.has_method("hit_by_spell"):
+		for i in damage:
+			ghost.hit_by_spell()
+	else:
+		for i in damage:
+			ghost.get_banished()
 
 
 func _explode_aoe() -> void:

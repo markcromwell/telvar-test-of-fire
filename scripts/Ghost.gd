@@ -50,6 +50,10 @@ const ANIM_FPS: float = 8.0
 var _anim_timer: float = 0.0
 var _anim_col: int = 0  # 0-3, cycles through walk frames
 
+# Spell-triggered frighten (shorter duration than banish mode)
+const SPELL_FRIGHTEN_DURATION: float = 3.0
+var _spell_frighten_timer: float = 0.0
+
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var ray_cast: RayCast2D = $RayCast2D
@@ -62,6 +66,7 @@ func _ready() -> void:
 	collision_mask = 1
 	_state_timer = SCATTER_TIME
 	_patrol_origin = position
+	add_to_group("ghosts")
 	_configure_type()
 
 
@@ -71,6 +76,7 @@ func _configure_type() -> void:
 		sprite.hframes = 4
 		sprite.vframes = 4
 		sprite.frame = 0
+		sprite.scale = Vector2(0.75, 0.75)
 	match ghost_type:
 		GhostType.AEMON:
 			_speed = BASE_SPEED * 1.1
@@ -121,6 +127,11 @@ func _physics_process(delta: float) -> void:
 	_update_undead_stagger(delta)
 	_check_hound_howl()
 	_update_animation(delta)
+	# Spell-triggered frighten timeout
+	if _spell_frighten_timer > 0.0:
+		_spell_frighten_timer -= delta
+		if _spell_frighten_timer <= 0.0 and current_state == State.FRIGHTENED and not GameManager.is_banish_mode:
+			exit_frightened()
 	if _stagger_timer > 0.0:
 		return
 	if is_moving:
@@ -349,6 +360,22 @@ func _find_player() -> Node2D:
 	return null
 
 
+func hit_by_spell() -> void:
+	if _is_invulnerable:
+		if ghost_type == GhostType.ELEMENTAL:
+			_spawn_immune_feedback()
+		return
+	if current_state == State.EATEN:
+		return
+	if current_state == State.FRIGHTENED:
+		# Already frightened — kill it
+		get_banished()
+	else:
+		# First hit: frighten briefly so a second shot can kill
+		enter_frightened()
+		_spell_frighten_timer = SPELL_FRIGHTEN_DURATION
+
+
 func get_banished() -> void:
 	if _is_invulnerable:
 		if ghost_type == GhostType.ELEMENTAL:
@@ -358,6 +385,7 @@ func get_banished() -> void:
 		_stagger_timer = 0.5
 	if current_state == State.FRIGHTENED:
 		current_state = State.EATEN
+		_spell_frighten_timer = 0.0
 		if sprite:
 			sprite.modulate = Color(0.8, 0.8, 0.8, 0.4)
 		_spawn_eaten_particles()

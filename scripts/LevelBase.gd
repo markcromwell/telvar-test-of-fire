@@ -15,6 +15,8 @@ var _contact_cooldown: float = 0.0
 const CONTACT_COOLDOWN_TIME: float = 0.15
 const KILL_RADIUS: float = TILE_SIZE * 0.6
 const INTRO_PROXIMITY_TILES: float = 5.0
+var _lore_cooldown: float = 0.0
+const LORE_RESPAWN_SUPPRESSION: float = 3.0
 
 @onready var hud: CanvasLayer = $HUD
 
@@ -22,6 +24,8 @@ const INTRO_PROXIMITY_TILES: float = 5.0
 func _physics_process(delta: float) -> void:
 	if _contact_cooldown > 0.0:
 		_contact_cooldown -= delta
+	if _lore_cooldown > 0.0:
+		_lore_cooldown -= delta
 	_check_ghost_kills()
 	_check_ghost_introductions()
 
@@ -200,6 +204,7 @@ func _on_player_died() -> void:
 func _respawn_player() -> void:
 	if _player and _player.has_method("respawn"):
 		_player.respawn(_player_spawn)
+		_lore_cooldown = LORE_RESPAWN_SUPPRESSION
 
 
 func _on_ghost_eaten(ghost: CharacterBody2D) -> void:
@@ -265,6 +270,8 @@ func _spawn_floating_score(pos: Vector2, points: int) -> void:
 
 func _check_ghost_introductions() -> void:
 	if not _player or not _player.is_alive:
+		return
+	if _lore_cooldown > 0.0:
 		return
 	for ghost in _ghosts:
 		if not ghost or not is_instance_valid(ghost):

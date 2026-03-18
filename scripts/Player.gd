@@ -30,6 +30,7 @@ func _ready() -> void:
 		sprite.hframes = 4
 		sprite.vframes = 4
 		sprite.frame = 0
+		sprite.scale = Vector2(0.75, 0.75)
 
 
 func _physics_process(delta: float) -> void:
