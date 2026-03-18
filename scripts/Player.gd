@@ -23,7 +23,7 @@ func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
 	if sprite:
-		sprite.texture = load("res://assets/sprites/player/telvar_idle.png")
+		sprite.texture = load("res://assets/sprites/player/telvar_idle_128.png")
 
 
 func _physics_process(delta: float) -> void:

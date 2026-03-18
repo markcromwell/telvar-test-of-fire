@@ -28,7 +28,7 @@ func _ready() -> void:
 	_update_lives(GameManager.lives)
 	_create_mana_bar()
 	GameManager.mana_changed.connect(_on_mana_changed)
-	_on_mana_changed(GameManager.mana, float(GameManager.MAX_MANA))
+	_on_mana_changed(GameManager.mana)
 
 
 func _create_mana_bar() -> void:
@@ -58,10 +58,10 @@ func _create_mana_bar() -> void:
 	add_child(_mana_label)
 
 
-func _on_mana_changed(current: float, max_val: float) -> void:
+func _on_mana_changed(current: int) -> void:
 	if not _mana_fill or not _mana_bg:
 		return
-	var ratio: float = current / max_val if max_val > 0.0 else 0.0
+	var ratio: float = float(current) / float(GameManager.MAX_MANA) if GameManager.MAX_MANA > 0 else 0.0
 	_mana_fill.size.x = _mana_bg.size.x * ratio
 	# Color shifts with spell tier
 	const TIER_COLORS: Array = [Color(0.9, 0.1, 0.1), Color(1.0, 0.5, 0.05),
@@ -116,7 +116,7 @@ func set_level_name(lname: String) -> void:
 func show_lore_popup(text: String) -> void:
 	if not lore_popup:
 		return
-	var lore_text := lore_popup.get_node_or_null("LoreText") as Label
+	var lore_text := lore_popup.get_node_or_null("LorePanel/VBoxContainer/LoreText") as Label
 	if lore_text:
 		lore_text.text = text
 	_tween_show(lore_popup)

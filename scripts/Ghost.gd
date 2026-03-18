@@ -63,29 +63,32 @@ func _ready() -> void:
 func _configure_type() -> void:
 	if sprite:
 		sprite.modulate = Color(1.0, 1.0, 1.0)
+		sprite.hframes = 4
+		sprite.vframes = 4
+		sprite.frame = 0
 	match ghost_type:
 		GhostType.AEMON:
 			_speed = BASE_SPEED * 1.1
 			if sprite:
-				sprite.texture = load("res://assets/sprites/ghosts/aemon_guardian.png")
+				sprite.texture = load("res://assets/sprites/ghosts/aemon_guardian_walk_sheet.png")
 		GhostType.ABYSSAL:
 			_speed = BASE_SPEED
 			if sprite:
-				sprite.texture = load("res://assets/sprites/ghosts/abyssal_creature.png")
+				sprite.texture = load("res://assets/sprites/ghosts/abyssal_creature_walk_sheet.png")
 		GhostType.UNDEAD:
 			_speed = BASE_SPEED * 0.8
 			if sprite:
-				sprite.texture = load("res://assets/sprites/ghosts/undead.png")
+				sprite.texture = load("res://assets/sprites/ghosts/undead_walk_sheet.png")
 		GhostType.ELEMENTAL:
 			_speed = BASE_SPEED * 0.9
 			_is_invulnerable = true
 			if sprite:
-				sprite.texture = load("res://assets/sprites/ghosts/elemental_guardian.png")
+				sprite.texture = load("res://assets/sprites/ghosts/elemental_guardian_walk_sheet.png")
 			_setup_elemental_aura()
 		GhostType.HOUND:
 			_speed = BASE_SPEED * 1.2
 			if sprite:
-				sprite.texture = load("res://assets/sprites/ghosts/hound_fenrir.png")
+				sprite.texture = load("res://assets/sprites/ghosts/hound_fenrir_walk_sheet.png")
 
 
 func _setup_elemental_aura() -> void:
@@ -331,8 +334,7 @@ func get_banished() -> void:
 	if current_state == State.FRIGHTENED:
 		current_state = State.EATEN
 		if sprite:
-			sprite.texture = load("res://assets/sprites/ghosts/ghost_eaten.png")
-			sprite.modulate = Color(1.0, 1.0, 1.0, 0.7)
+			sprite.modulate = Color(0.8, 0.8, 0.8, 0.4)
 		_spawn_eaten_particles()
 		eaten.emit()
 
@@ -374,8 +376,7 @@ func enter_frightened() -> void:
 	if current_state != State.EATEN:
 		current_state = State.FRIGHTENED
 		if sprite:
-			sprite.texture = load("res://assets/sprites/ghosts/ghost_frightened.png")
-			sprite.modulate = Color(1.0, 1.0, 1.0)
+			sprite.modulate = Color(0.15, 0.15, 1.0)
 
 
 func exit_frightened() -> void:
