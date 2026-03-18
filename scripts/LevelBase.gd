@@ -103,6 +103,7 @@ func _build_maze_geometry() -> void:
 				var tile := TextureRect.new()
 				tile.texture = floor_tex
 				tile.stretch_mode = TextureRect.STRETCH_SCALE
+				tile.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 				tile.size = Vector2(TILE_SIZE, TILE_SIZE)
 				tile.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
 				tile.z_index = -10
@@ -137,6 +138,7 @@ func _build_maze_geometry() -> void:
 				var tile := TextureRect.new()
 				tile.texture = wall_tex
 				tile.stretch_mode = TextureRect.STRETCH_SCALE
+				tile.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 				tile.size = Vector2(TILE_SIZE, TILE_SIZE)
 				tile.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
 				tile.z_index = -5
