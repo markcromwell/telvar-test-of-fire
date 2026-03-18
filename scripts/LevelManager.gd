@@ -8,7 +8,7 @@ extends Node2D
 var player: CharacterBody2D = null
 var ghosts: Array[CharacterBody2D] = []
 var spell_pages_remaining := 0
-var spheres_of_darkness: Array[Node2D] = []
+var anima_shards: Array[Node2D] = []
 
 const PLAYER_SCENE := preload("res://scenes/Player.tscn") if FileAccess.file_exists("res://scenes/Player.tscn") else null
 const GHOST_SCENE := preload("res://scenes/Ghost.tscn") if FileAccess.file_exists("res://scenes/Ghost.tscn") else null

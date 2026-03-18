@@ -5,6 +5,14 @@ signal eaten
 enum GhostType { AEMON, ABYSSAL, UNDEAD, ELEMENTAL, HOUND }
 enum State { SCATTER, CHASE, FRIGHTENED, EATEN }
 
+const GHOST_DISPLAY_NAMES: Dictionary = {
+	GhostType.AEMON: "Shade of Aemon",
+	GhostType.ABYSSAL: "Abyssal Wyrm",
+	GhostType.UNDEAD: "Undead",
+	GhostType.ELEMENTAL: "Veneficturis Daemon",
+	GhostType.HOUND: "Abyssal Hound of Fenrir",
+}
+
 @export var ghost_type: GhostType = GhostType.AEMON
 
 const TILE_SIZE: int = 24
@@ -387,6 +395,10 @@ func _spawn_eaten_particles() -> void:
 	add_child(particles)
 	var timer := get_tree().create_timer(0.6)
 	timer.timeout.connect(particles.queue_free)
+
+
+func get_display_name() -> String:
+	return GHOST_DISPLAY_NAMES.get(ghost_type, "Unknown Shade")
 
 
 func set_invulnerable(val: bool) -> void:
