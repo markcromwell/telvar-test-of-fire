@@ -14,6 +14,7 @@ var _player_spawn: Vector2 = Vector2(336, 564)
 var _contact_cooldown: float = 0.0
 const CONTACT_COOLDOWN_TIME: float = 0.15
 const KILL_RADIUS: float = TILE_SIZE * 0.6
+const INTRO_PROXIMITY_TILES: float = 5.0
 
 @onready var hud: CanvasLayer = $HUD
 
@@ -22,6 +23,7 @@ func _physics_process(delta: float) -> void:
 	if _contact_cooldown > 0.0:
 		_contact_cooldown -= delta
 	_check_ghost_kills()
+	_check_ghost_introductions()
 
 
 func _check_ghost_kills() -> void:
@@ -165,6 +167,22 @@ func _spawn_floating_score(pos: Vector2, points: int) -> void:
 	tween.tween_property(label, "modulate:a", 0.0, 0.75)
 	tween.set_parallel(false)
 	tween.tween_callback(label.queue_free)
+
+
+func _check_ghost_introductions() -> void:
+	if not _player or not _player.is_alive:
+		return
+	for ghost in _ghosts:
+		if not ghost or not is_instance_valid(ghost):
+			continue
+		var dist_tiles: float = _player.position.distance_to(ghost.position) / TILE_SIZE
+		if dist_tiles > INTRO_PROXIMITY_TILES:
+			continue
+		var intro_text: String = GameManager.try_introduce_ghost(ghost.ghost_type)
+		if intro_text != "":
+			if hud and hud.has_method("show_lore_popup"):
+				hud.show_lore_popup(intro_text)
+			break
 
 
 func complete() -> void:

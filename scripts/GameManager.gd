@@ -37,6 +37,15 @@ var current_maze: Dictionary = {}
 var _banish_timer: float = 0.0
 var _mana_regen_accumulator: float = 0.0
 var _mana_emit_accumulator: float = 0.0
+var _introduced_ghosts: Array[int] = []
+
+const GHOST_INTRO_TEXTS: Dictionary = {
+	0: "The Shade of Aemon — once Telvar's mentor, now bound to the Trial as its most relentless pursuer.",
+	1: "The Abyssal Wyrm — summoned from the deep rift, it strikes from angles no mortal can predict.",
+	2: "The Undead — remnants of failed candidates, cursed to patrol the maze they could not escape.",
+	3: "Veneficturis Daemon — an elemental bound by Myramar's seal, immune to banishment.",
+	4: "The Hound of Fenrir — loosed only when the overseers want the Trial to end in death.",
+}
 
 const TILE_SIZE: int = 24
 const MANA_REGEN_FULL_RATE: float = MAX_MANA / 15.0  # per second at full rate
@@ -118,6 +127,7 @@ func new_game() -> void:
 	level_time = 0.0
 	mana = 0
 	spell_tier = 0
+	_introduced_ghosts = []
 	_reset_level_state()
 	score_changed.emit(score)
 	lives_changed.emit(lives)
@@ -236,3 +246,10 @@ func set_spell_tier(tier: int) -> void:
 
 func is_meter_full() -> bool:
 	return spell_pages_collected >= TOTAL_SPELL_PAGES
+
+
+func try_introduce_ghost(ghost_type_id: int) -> String:
+	if ghost_type_id in _introduced_ghosts:
+		return ""
+	_introduced_ghosts.append(ghost_type_id)
+	return GHOST_INTRO_TEXTS.get(ghost_type_id, "")
