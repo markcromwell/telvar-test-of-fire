@@ -11,6 +11,7 @@ func _ready() -> void:
 	level_name = "GRAND HALL"
 	super._ready()
 	_scatter_herd_enabled = true
+	GameManager.uncollected_page_positions = get_uncollected_page_positions()
 
 
 func _get_maze_layout() -> Array:

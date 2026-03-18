@@ -197,6 +197,10 @@ func _pick_direction(valid_dirs: Array[Vector2]) -> Vector2:
 		return valid_dirs[randi() % valid_dirs.size()]
 	if current_state == State.EATEN:
 		return _dir_toward(home_position, valid_dirs)
+	if current_state == State.SCATTER and _should_scatter_toward_page():
+		var page_target := _get_nearest_uncollected_page()
+		if page_target != Vector2.ZERO:
+			return _dir_toward(page_target, valid_dirs)
 	match ghost_type:
 		GhostType.AEMON:
 			var player := _find_player()
@@ -395,6 +399,28 @@ func _spawn_eaten_particles() -> void:
 	add_child(particles)
 	var timer := get_tree().create_timer(0.6)
 	timer.timeout.connect(particles.queue_free)
+
+
+func _should_scatter_toward_page() -> bool:
+	if GameManager.current_level != 6:
+		return false
+	if GameManager.uncollected_page_positions.is_empty():
+		return false
+	return randf() < 0.45
+
+
+func _get_nearest_uncollected_page() -> Vector2:
+	var pages := GameManager.uncollected_page_positions
+	if pages.is_empty():
+		return Vector2.ZERO
+	var nearest: Vector2 = pages[0]
+	var best_dist: float = global_position.distance_squared_to(pages[0])
+	for i in range(1, pages.size()):
+		var dist: float = global_position.distance_squared_to(pages[i])
+		if dist < best_dist:
+			best_dist = dist
+			nearest = pages[i]
+	return nearest
 
 
 func get_display_name() -> String:

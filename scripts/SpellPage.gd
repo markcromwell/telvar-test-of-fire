@@ -32,7 +32,7 @@ func _collect() -> void:
 	_collected = true
 	_spawn_collect_particles()
 	_play_collect_chime()
-	GameManager.collect_spell_page()
+	GameManager.collect_spell_page(global_position, page_name)
 	queue_free()
 
 

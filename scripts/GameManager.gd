@@ -9,6 +9,7 @@ signal level_completed(level_num: int)
 signal game_over
 signal banish_mode_started
 signal banish_mode_ended
+signal page_collected(page_name: String)
 
 const MAX_LIVES: int = 3
 const TOTAL_SPELL_PAGES: int = 12
@@ -31,6 +32,7 @@ var is_banish_mode: bool = false
 var ghost_combo: int = 0
 var level_time: float = 0.0
 var is_game_active: bool = false
+var uncollected_page_positions: Array[Vector2] = []
 
 var current_maze: Dictionary = {}
 
@@ -145,6 +147,7 @@ func _reset_level_state() -> void:
 	_banish_timer = 0.0
 	_mana_regen_accumulator = 0.0
 	_mana_emit_accumulator = 0.0
+	uncollected_page_positions = []
 
 
 func start_level(level_num: int) -> void:
@@ -156,13 +159,30 @@ func start_level(level_num: int) -> void:
 	spell_meter_changed.emit(spell_meter)
 
 
-func collect_spell_page() -> void:
+func collect_spell_page(page_position: Vector2 = Vector2.ZERO, page_name: String = "") -> void:
 	spell_pages_collected += 1
 	add_score(PAGE_SCORE)
 	spell_meter = float(spell_pages_collected) / float(TOTAL_SPELL_PAGES)
 	spell_meter_changed.emit(spell_meter)
+	_prune_page_position(page_position)
+	if page_name != "":
+		page_collected.emit(page_name)
 	if spell_pages_collected >= TOTAL_SPELL_PAGES:
 		_start_banish_mode()
+
+
+func _prune_page_position(page_pos: Vector2) -> void:
+	if page_pos == Vector2.ZERO:
+		return
+	var closest_idx: int = -1
+	var closest_dist: float = 24.0 * 24.0  # within one tile squared
+	for i in range(uncollected_page_positions.size()):
+		var dist: float = uncollected_page_positions[i].distance_squared_to(page_pos)
+		if dist < closest_dist:
+			closest_dist = dist
+			closest_idx = i
+	if closest_idx >= 0:
+		uncollected_page_positions.remove_at(closest_idx)
 
 
 func _start_banish_mode() -> void:
