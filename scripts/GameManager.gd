@@ -24,8 +24,13 @@ var is_banish_mode: bool = false
 var ghost_combo: int = 0
 var level_time: float = 0.0
 var is_game_active: bool = false
+var current_maze: PackedStringArray = PackedStringArray()
+var continue_available: bool = false
 
 var _banish_timer: float = 0.0
+var _continue_level: int = 1
+var _continue_score: int = 0
+var _continue_tier: int = 0
 
 
 func _ready() -> void:
@@ -63,6 +68,8 @@ func _reset_level_state() -> void:
 
 
 func start_level(level_num: int) -> void:
+	if level_num != current_level:
+		current_maze = PackedStringArray()
 	current_level = level_num
 	_reset_level_state()
 	is_game_active = true
@@ -123,6 +130,34 @@ func complete_level() -> void:
 		add_score(500)
 	is_game_active = false
 	level_completed.emit(current_level)
+
+
+func save_continue_state() -> void:
+	_continue_level = current_level
+	_continue_score = score
+	_continue_tier = spell_pages_collected
+	continue_available = true
+
+
+func restore_continue_state() -> void:
+	if not continue_available:
+		return
+	current_level = _continue_level
+	score = int(_continue_score * 0.5)
+	lives = MAX_LIVES
+	spell_pages_collected = _continue_tier
+	continue_available = false
+	_reset_level_state()
+	score_changed.emit(score)
+	lives_changed.emit(lives)
+	spell_meter_changed.emit(spell_meter)
+
+
+func clear_continue_state() -> void:
+	_continue_level = 1
+	_continue_score = 0
+	_continue_tier = 0
+	continue_available = false
 
 
 func get_final_score() -> int:
