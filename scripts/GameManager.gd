@@ -212,6 +212,31 @@ func complete_level() -> void:
 	level_completed.emit(current_level)
 
 
+func save_continue_state() -> Dictionary:
+	return {
+		"level": current_level,
+		"score": score,
+		"spell_tier": spell_tier,
+	}
+
+
+func restore_continue_state(state: Dictionary) -> void:
+	var saved_score: int = state.get("score", 0)
+	score = int(saved_score * 0.5)
+	current_level = state.get("level", 1)
+	spell_tier = state.get("spell_tier", 0)
+	lives = MAX_LIVES
+	mana = 0
+	is_game_active = true
+	_introduced_ghosts = []
+	_reset_level_state()
+	score_changed.emit(score)
+	lives_changed.emit(lives)
+	spell_meter_changed.emit(spell_meter)
+	mana_changed.emit(mana)
+	spell_tier_changed.emit(spell_tier)
+
+
 func get_final_score() -> int:
 	return score
 
