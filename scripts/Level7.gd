@@ -37,8 +37,8 @@ func _freeze_all_ghosts() -> void:
 	for ghost in _ghosts:
 		if not ghost or not is_instance_valid(ghost):
 			continue
-		_pre_freeze_speeds[ghost] = ghost._speed
-		ghost._speed = 0.0
+		_pre_freeze_speeds[ghost] = ghost.get_speed()
+		ghost.set_speed(0.0)
 		ghost.is_moving = false
 
 
@@ -73,7 +73,7 @@ func _resume_ghosts_boosted() -> void:
 		if not ghost or not is_instance_valid(ghost):
 			continue
 		var base_speed: float = _pre_freeze_speeds.get(ghost, ghost.BASE_SPEED)
-		ghost._speed = base_speed * POST_SEQUENCE_SPEED_MULT
+		ghost.set_speed(base_speed * POST_SEQUENCE_SPEED_MULT)
 		ghost.is_moving = false
 
 

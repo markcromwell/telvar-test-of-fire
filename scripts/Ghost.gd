@@ -429,3 +429,11 @@ func get_display_name() -> String:
 
 func set_invulnerable(val: bool) -> void:
 	_is_invulnerable = val
+
+
+func get_speed() -> float:
+	return _speed
+
+
+func set_speed(val: float) -> void:
+	_speed = val

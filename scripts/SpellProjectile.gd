@@ -40,7 +40,7 @@ func _ready() -> void:
 
 
 func _apply_tier() -> void:
-	var t: int = clampi(tier, 0, Tier.ARCANE_BURST)
+	var t: int = clampi(tier, 0, TIER_DAMAGE.size() - 1)
 	damage = TIER_DAMAGE[t]
 	speed = BASE_SPEED
 	penetrating = false
