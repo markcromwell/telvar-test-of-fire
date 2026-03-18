@@ -59,7 +59,7 @@ func _apply_tier() -> void:
 
 func _setup_collision() -> void:
 	collision_layer = 0
-	collision_mask = 4  # ghosts layer
+	collision_mask = 5  # layer 1 (walls) + layer 4 (ghosts, bit 3 = value 4 but ghost layer is bit 2 = 4)
 	var shape := CircleShape2D.new()
 	shape.radius = 4.0
 	var col := CollisionShape2D.new()
@@ -145,6 +145,11 @@ func _steer_toward_nearest_ghost(_delta: float) -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if _has_hit and not penetrating:
 		return
+	# Wall hit — stop the projectile
+	if body is StaticBody2D:
+		_spawn_impact_effect()
+		queue_free()
+		return
 	var ghost := body as CharacterBody2D
 	if ghost == null:
 		return
@@ -158,6 +163,26 @@ func _on_body_entered(body: Node2D) -> void:
 		if not penetrating:
 			_has_hit = true
 			queue_free()
+
+
+func _spawn_impact_effect() -> void:
+	var color_idx: int = clampi(tier, 0, TIER_COLORS.size() - 1)
+	var sparks := CPUParticles2D.new()
+	sparks.emitting = true
+	sparks.one_shot = true
+	sparks.explosiveness = 0.9
+	sparks.amount = 8
+	sparks.lifetime = 0.3
+	sparks.direction = -direction
+	sparks.spread = 90.0
+	sparks.initial_velocity_min = 30.0
+	sparks.initial_velocity_max = 70.0
+	sparks.gravity = Vector2.ZERO
+	sparks.color = TIER_COLORS[color_idx]
+	get_parent().add_child(sparks)
+	sparks.global_position = global_position
+	var t := sparks.get_tree().create_timer(0.4)
+	t.timeout.connect(sparks.queue_free)
 
 
 func _apply_damage_to_ghost(ghost: CharacterBody2D) -> void:

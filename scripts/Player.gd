@@ -138,11 +138,31 @@ func _try_cast_spell() -> void:
 		return
 	if not GameManager.can_cast_spell():
 		return
-	var fire_dir: Vector2 = current_direction if current_direction != Vector2.ZERO else Vector2.RIGHT
+	var fire_dir: Vector2 = _get_spell_direction()
 	if not GameManager.spend_mana_for_spell():
 		return
 	cast_spell(fire_dir, GameManager.spell_tier)
 	_spell_cooldown_timer = SPELL_COOLDOWN
+
+
+func _get_spell_direction() -> Vector2:
+	# Aim at nearest active (non-eaten) ghost
+	var ghosts := get_tree().get_nodes_in_group("ghosts")
+	var nearest: Node2D = null
+	var nearest_dist: float = INF
+	for g in ghosts:
+		var node := g as Node2D
+		if node == null:
+			continue
+		if g.has_method("get_banished") and g.current_state == g.State.EATEN:
+			continue
+		var d: float = global_position.distance_squared_to(node.global_position)
+		if d < nearest_dist:
+			nearest_dist = d
+			nearest = node
+	if nearest:
+		return (nearest.global_position - global_position).normalized()
+	return current_direction if current_direction != Vector2.ZERO else Vector2.RIGHT
 
 
 func cast_spell(dir: Vector2, spell_tier: int) -> void:
