@@ -20,7 +20,7 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 
 [autoload]
 
-Logger="*res://scripts/Logger.gd"
+Log="*res://scripts/Logger.gd"
 GameManager="*res://scripts/GameManager.gd"
 AudioManager="*res://scripts/AudioManager.gd"
 SettingsManager="*res://scripts/SettingsManager.gd"

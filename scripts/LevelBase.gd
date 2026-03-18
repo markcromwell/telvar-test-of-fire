@@ -82,9 +82,9 @@ func _get_floor_texture_path() -> String:
 func _build_maze_geometry() -> void:
 	var layout := _get_maze_layout()
 	if layout.is_empty():
-		Logger.info("_build_maze_geometry: no layout, skipping")
+		Log.info("_build_maze_geometry: no layout, skipping")
 		return
-	Logger.info("_build_maze_geometry: %d rows" % layout.size())
+	Log.info("_build_maze_geometry: %d rows" % layout.size())
 	# Remove placeholder outer-wall nodes — the layout replaces them
 	var old_walls := get_node_or_null("MazeWalls")
 	if old_walls:
@@ -176,7 +176,7 @@ func _add_maze_camera() -> void:
 
 
 func _setup_level() -> void:
-	Logger.info("LevelBase._setup_level: level=%d name=%s" % [level_number, level_name])
+	Log.info("LevelBase._setup_level: level=%d name=%s" % [level_number, level_name])
 	_build_maze_geometry()
 	_add_maze_camera()
 	_player = get_node_or_null("Player") as CharacterBody2D
@@ -191,9 +191,9 @@ func _setup_level() -> void:
 			if ghost:
 				_ghosts.append(ghost)
 				ghost.eaten.connect(_on_ghost_eaten.bind(ghost))
-		Logger.info("Ghosts loaded: %d" % _ghosts.size())
+		Log.info("Ghosts loaded: %d" % _ghosts.size())
 	else:
-		Logger.warn("No 'Ghosts' node found in scene")
+		Log.warn("No 'Ghosts' node found in scene")
 	var page_container := get_node_or_null("SpellPages")
 	if page_container:
 		_pages_remaining = page_container.get_child_count()

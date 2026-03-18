@@ -68,7 +68,7 @@ func _ready() -> void:
 	_patrol_origin = position
 	add_to_group("ghosts")
 	_configure_type()
-	Logger.info("Ghost ready: type=%d pos=%s" % [ghost_type, position])
+	Log.info("Ghost ready: type=%d pos=%s" % [ghost_type, position])
 
 
 func _configure_type() -> void:
@@ -79,14 +79,14 @@ func _configure_type() -> void:
 		sprite.frame = 0
 		sprite.scale = Vector2(0.75, 0.75)
 	else:
-		Logger.warn("Ghost type=%d has no Sprite2D — check scene" % ghost_type)
+		Log.warn("Ghost type=%d has no Sprite2D — check scene" % ghost_type)
 	match ghost_type:
 		GhostType.AEMON:
 			_speed = BASE_SPEED * 1.1
 			if sprite:
 				var tex = load("res://assets/sprites/ghosts/aemon_guardian_walk_sheet.png")
 				if not tex:
-					Logger.warn("Missing texture: aemon_guardian_walk_sheet.png")
+					Log.warn("Missing texture: aemon_guardian_walk_sheet.png")
 				sprite.texture = tex
 		GhostType.ABYSSAL:
 			_speed = BASE_SPEED
@@ -232,7 +232,7 @@ func _choose_next_direction() -> void:
 		if _can_move_dir(-current_direction):
 			valid_dirs.append(-current_direction)
 		else:
-			Logger.warn("Ghost type=%d fully blocked at %s — no valid direction" % [ghost_type, position])
+			Log.warn("Ghost type=%d fully blocked at %s — no valid direction" % [ghost_type, position])
 			return
 	var chosen: Vector2 = _pick_direction(valid_dirs)
 	current_direction = chosen
