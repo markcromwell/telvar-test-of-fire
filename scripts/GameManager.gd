@@ -17,7 +17,6 @@ const GHOST_SCORES: Array[int] = [50, 100, 200, 400]
 const PAGE_SCORE: int = 10
 const LEVEL_COUNT: int = 7
 const MAX_MANA: int = 100
-const MANA_COSTS: Array[int] = [8, 8, 10, 10, 14, 14, 20]
 const MAX_SPELL_TIER: int = 6
 
 var score: int = 0
@@ -241,9 +240,12 @@ func get_final_score() -> int:
 	return score
 
 
+func _mana_cost_for_tier(tier: int) -> int:
+	return int(8.0 + float(clampi(tier, 0, MAX_SPELL_TIER)) * 2.0)
+
+
 func get_mana_cost() -> int:
-	var tier_idx: int = clampi(spell_tier, 0, MANA_COSTS.size() - 1)
-	return MANA_COSTS[tier_idx]
+	return _mana_cost_for_tier(spell_tier)
 
 
 func can_cast_spell() -> bool:

@@ -34,19 +34,19 @@ func _assert_false(val: bool, label: String) -> void:
 func _run_game_manager_tests() -> void:
 	var gm: Node = load("res://scripts/GameManager.gd").new()
 
-	# Mana costs
-	_assert_eq(gm.MANA_COSTS.size(), 7, "MANA_COSTS has 7 entries")
-	_assert_eq(gm.MANA_COSTS[0], 8, "tier 0 cost = 8")
-	_assert_eq(gm.MANA_COSTS[1], 8, "tier 1 cost = 8")
-	_assert_eq(gm.MANA_COSTS[2], 10, "tier 2 cost = 10")
-	_assert_eq(gm.MANA_COSTS[3], 10, "tier 3 cost = 10")
-	_assert_eq(gm.MANA_COSTS[4], 14, "tier 4 cost = 14")
-	_assert_eq(gm.MANA_COSTS[5], 14, "tier 5 cost = 14")
-	_assert_eq(gm.MANA_COSTS[6], 20, "tier 6 cost = 20")
-
-	# get_mana_cost
+	# Mana cost formula: 8 + tier * 2
 	gm.spell_tier = 0
 	_assert_eq(gm.get_mana_cost(), 8, "get_mana_cost tier 0")
+	gm.spell_tier = 1
+	_assert_eq(gm.get_mana_cost(), 10, "get_mana_cost tier 1")
+	gm.spell_tier = 2
+	_assert_eq(gm.get_mana_cost(), 12, "get_mana_cost tier 2")
+	gm.spell_tier = 3
+	_assert_eq(gm.get_mana_cost(), 14, "get_mana_cost tier 3")
+	gm.spell_tier = 4
+	_assert_eq(gm.get_mana_cost(), 16, "get_mana_cost tier 4")
+	gm.spell_tier = 5
+	_assert_eq(gm.get_mana_cost(), 18, "get_mana_cost tier 5")
 	gm.spell_tier = 6
 	_assert_eq(gm.get_mana_cost(), 20, "get_mana_cost tier 6")
 

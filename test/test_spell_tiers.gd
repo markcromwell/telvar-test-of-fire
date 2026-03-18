@@ -16,10 +16,6 @@ func after_test() -> void:
 
 # --- Mana cost per tier ---
 
-func test_mana_costs_array_length() -> void:
-	assert_that(_gm.MANA_COSTS.size()).is_equal(7)
-
-
 func test_mana_cost_tier_0() -> void:
 	_gm.spell_tier = 0
 	assert_that(_gm.get_mana_cost()).is_equal(8)
@@ -27,27 +23,27 @@ func test_mana_cost_tier_0() -> void:
 
 func test_mana_cost_tier_1() -> void:
 	_gm.spell_tier = 1
-	assert_that(_gm.get_mana_cost()).is_equal(8)
+	assert_that(_gm.get_mana_cost()).is_equal(10)
 
 
 func test_mana_cost_tier_2() -> void:
 	_gm.spell_tier = 2
-	assert_that(_gm.get_mana_cost()).is_equal(10)
+	assert_that(_gm.get_mana_cost()).is_equal(12)
 
 
 func test_mana_cost_tier_3() -> void:
 	_gm.spell_tier = 3
-	assert_that(_gm.get_mana_cost()).is_equal(10)
+	assert_that(_gm.get_mana_cost()).is_equal(14)
 
 
 func test_mana_cost_tier_4() -> void:
 	_gm.spell_tier = 4
-	assert_that(_gm.get_mana_cost()).is_equal(14)
+	assert_that(_gm.get_mana_cost()).is_equal(16)
 
 
 func test_mana_cost_tier_5() -> void:
 	_gm.spell_tier = 5
-	assert_that(_gm.get_mana_cost()).is_equal(14)
+	assert_that(_gm.get_mana_cost()).is_equal(18)
 
 
 func test_mana_cost_tier_6() -> void:
