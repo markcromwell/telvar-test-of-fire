@@ -12,29 +12,6 @@ func _ready() -> void:
 	collision_layer = 8
 	collision_mask = 2
 	body_entered.connect(_on_body_entered)
-	if sprite and not sprite.texture:
-		const PAGE_SPRITES: Array[String] = [
-			"res://assets/sprites/pages/page_flame.png",
-			"res://assets/sprites/pages/page_frost.png",
-			"res://assets/sprites/pages/page_earth.png",
-			"res://assets/sprites/pages/page_water.png",
-			"res://assets/sprites/pages/page_thunder.png",
-			"res://assets/sprites/pages/page_light.png",
-			"res://assets/sprites/pages/page_shadow.png",
-			"res://assets/sprites/pages/page_spirit.png",
-			"res://assets/sprites/pages/page_time.png",
-			"res://assets/sprites/pages/page_void.png",
-			"res://assets/sprites/pages/page_binding.png",
-		]
-		var idx: int = absi(page_name.hash()) % PAGE_SPRITES.size()
-		var img := Image.new()
-		if img.load(PAGE_SPRITES[idx]) == OK:
-			sprite.texture = ImageTexture.create_from_image(img)
-			sprite.scale = Vector2(16.0 / 48.0, 16.0 / 48.0)
-		else:
-			var fallback := Image.create(14, 14, false, Image.FORMAT_RGBA8)
-			fallback.fill(Color(1.0, 0.9, 0.2))
-			sprite.texture = ImageTexture.create_from_image(fallback)
 	_start_glow_animation()
 
 
@@ -55,7 +32,7 @@ func _collect() -> void:
 	_collected = true
 	_spawn_collect_particles()
 	_play_collect_chime()
-	GameManager.collect_spell_page(page_name)
+	GameManager.collect_spell_page(global_position, page_name)
 	queue_free()
 
 

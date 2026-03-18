@@ -1,6 +1,6 @@
 extends Node2D
 
-const TILE_SIZE: int = 48
+const TILE_SIZE: int = 24
 const MAZE_WIDTH: int = 28
 const MAZE_HEIGHT: int = 31
 
@@ -9,15 +9,52 @@ const MAZE_HEIGHT: int = 31
 
 var _player: CharacterBody2D
 var _ghosts: Array[CharacterBody2D] = []
-var _player_spawn: Vector2 = Vector2(648, 1128)
-var _cached_maze: PackedStringArray = PackedStringArray()
+var _pages_remaining: int = 0
+var _player_spawn: Vector2 = Vector2(336, 564)
+var _contact_cooldown: float = 0.0
+const CONTACT_COOLDOWN_TIME: float = 0.15
+const KILL_RADIUS: float = TILE_SIZE * 0.6
+const INTRO_PROXIMITY_TILES: float = 5.0
 
 @onready var hud: CanvasLayer = $HUD
 
 
+func _physics_process(delta: float) -> void:
+	if _contact_cooldown > 0.0:
+		_contact_cooldown -= delta
+	_check_ghost_kills()
+	_check_ghost_introductions()
+
+
+func _check_ghost_kills() -> void:
+	if not _player or not _player.is_alive:
+		return
+	if _contact_cooldown > 0.0:
+		return
+	var player_tile := Vector2i(
+		roundi(_player.position.x / TILE_SIZE),
+		roundi(_player.position.y / TILE_SIZE)
+	)
+	for ghost in _ghosts:
+		if not ghost or not is_instance_valid(ghost):
+			continue
+		if ghost.current_state == ghost.State.FRIGHTENED or ghost.current_state == ghost.State.EATEN:
+			continue
+		var ghost_tile := Vector2i(
+			roundi(ghost.position.x / TILE_SIZE),
+			roundi(ghost.position.y / TILE_SIZE)
+		)
+		if ghost_tile != player_tile:
+			continue
+		var dist: float = _player.position.distance_to(ghost.position)
+		if dist < KILL_RADIUS:
+			_contact_cooldown = CONTACT_COOLDOWN_TIME
+			_player.hit_by_ghost()
+			return
+
+
 func _ready() -> void:
 	_setup_level()
-	_setup_camera()
 	GameManager.banish_mode_started.connect(_on_banish_started)
 	GameManager.banish_mode_ended.connect(_on_banish_ended)
 	if hud:
@@ -26,300 +63,16 @@ func _ready() -> void:
 		hud.quit_pressed.connect(_quit_to_title)
 
 
-func _setup_camera() -> void:
-	var cam := Camera2D.new()
-	cam.position = Vector2(672, 744)
-	cam.zoom = Vector2(0.48, 0.48)
-	add_child(cam)
-	cam.make_current()
+func _resolve_maze() -> Dictionary:
+	if not GameManager.current_maze.is_empty():
+		return GameManager.current_maze
+	var maze := _generate_maze()
+	GameManager.current_maze = maze
+	return maze
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if not (event is InputEventKey and event.pressed):
-		return
-	# X — collect all spell pages instantly
-	if event.keycode == KEY_X:
-		var pages := get_node_or_null("SpellPages")
-		if pages:
-			for page in pages.get_children():
-				page.queue_free()
-		var needed: int = GameManager.TOTAL_SPELL_PAGES - GameManager.spell_pages_collected
-		for i in needed:
-			GameManager.collect_spell_page("DEBUG")
-	# 1-7 — jump directly to that level
-	const JUMP_KEYS: Array[int] = [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7]
-	var idx: int = JUMP_KEYS.find(event.keycode)
-	if idx >= 0:
-		var target: int = idx + 1
-		print("DEBUG: jumping to level ", target)
-		GameManager.start_level(target)
-		get_tree().change_scene_to_file("res://scenes/Level%d.tscn" % target)
-
-
-func _physics_process(_delta: float) -> void:
-	if not _player or not is_instance_valid(_player):
-		return
-	if not _player.is_alive:
-		return
-	if _player.get("is_invulnerable"):
-		return
-	for ghost in _ghosts:
-		if not is_instance_valid(ghost):
-			continue
-		var state: int = ghost.get("current_state") if ghost.get("current_state") != null else -1
-		var layer: int = ghost.get("collision_layer") if ghost.get("collision_layer") != null else 0
-		var vis: bool = ghost.is_visible_in_tree()
-		var grace: float = ghost.get("_kill_grace") if ghost.get("_kill_grace") != null else 0.0
-		var dist: float = _player.position.distance_to(ghost.position)
-		if dist < 20.0:
-			print("PROX ", ghost.name, " st=", state, " vis=", vis, " layer=", layer, " grace=", snappedf(grace, 0.01), " dist=", snappedf(dist, 0.1))
-		# Quad guard: eaten state, invisible, no collision layer, or in grace period
-		if state == 3 or not vis or layer == 0 or grace > 0.0:
-			continue
-		if dist < 14.0:
-			_handle_ghost_contact(ghost)
-			if not _player.is_alive:
-				return
-
-
-func _handle_ghost_contact(ghost: CharacterBody2D) -> void:
-	# State enum: SCATTER=0, CHASE=1, FRIGHTENED=2, EATEN=3
-	var state: int = ghost.get("current_state") if ghost.get("current_state") != null else -1
-	if state == 2:
-		if ghost.has_method("get_eaten"):
-			ghost.get_eaten()
-	elif state == 0 or state == 1:
-		if _player.has_method("hit_by_ghost"):
-			_player.hit_by_ghost()
-
-
-func _make_pixel_texture(w: int, h: int, color: Color) -> ImageTexture:
-	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	img.fill(color)
-	return ImageTexture.create_from_image(img)
-
-
-func _get_maze_layout() -> PackedStringArray:
-	return PackedStringArray()
-
-
-func _get_tileset_path() -> String:
-	return ""
-
-
-func _get_floor_tile_path() -> String:
-	return ""
-
-
-func _get_floor_tint() -> Color:
-	return Color.WHITE
-
-
-func _resolve_maze() -> PackedStringArray:
-	if not _cached_maze.is_empty():
-		return _cached_maze
-	var layout := _get_maze_layout()
-	if layout.is_empty():
-		layout = _generate_random_maze()
-	_cached_maze = layout
-	return _cached_maze
-
-
-func _build_maze_walls() -> void:
-	var layout := _resolve_maze()
-	if layout.is_empty():
-		return
-
-	# Wall: Kenney-style atlas tileset (32x32 tile at atlas row 1, col 0)
-	var tileset_tex: Texture2D = null
-	var ts_path := _get_tileset_path()
-	if ts_path != "":
-		var ts_img := Image.new()
-		if ts_img.load(ts_path) == OK:
-			tileset_tex = ImageTexture.create_from_image(ts_img)
-	var wall_region := Rect2(0, 34, 32, 32)
-	var wall_scale := Vector2(float(TILE_SIZE) / 32.0, float(TILE_SIZE) / 32.0)
-
-	# Floor: custom 64x64 PNG scaled to 48x48
-	var floor_tex: Texture2D = null
-	var floor_path := _get_floor_tile_path()
-	if floor_path != "":
-		var fl_img := Image.new()
-		if fl_img.load(floor_path) == OK:
-			floor_tex = ImageTexture.create_from_image(fl_img)
-	var floor_scale := Vector2(48.0 / 64.0, 48.0 / 64.0)
-
-	var wall_parent := Node2D.new()
-	wall_parent.name = "MazeLayout"
-	add_child(wall_parent)
-
-	# Dark base background
-	var bg := ColorRect.new()
-	bg.size = Vector2(MAZE_WIDTH * TILE_SIZE, MAZE_HEIGHT * TILE_SIZE)
-	bg.color = Color(0.06, 0.04, 0.02)
-	bg.z_index = -2
-	wall_parent.add_child(bg)
-
-	# Floor tiles stamped under every cell (walls cover them)
-	if floor_tex:
-		for row in layout.size():
-			var line: String = layout[row]
-			for col in line.length():
-				var sp := Sprite2D.new()
-				sp.texture = floor_tex
-				sp.scale = floor_scale
-				sp.position = Vector2(col * TILE_SIZE + TILE_SIZE * 0.5,
-						row * TILE_SIZE + TILE_SIZE * 0.5)
-				sp.z_index = -1
-				sp.modulate = _get_floor_tint()
-				wall_parent.add_child(sp)
-
-	# Wall tiles with collision
-	for row in layout.size():
-		var line: String = layout[row]
-		for col in line.length():
-			if line[col] == '#':
-				var body := StaticBody2D.new()
-				body.collision_layer = 1
-				body.position = Vector2(col * TILE_SIZE + TILE_SIZE * 0.5,
-						row * TILE_SIZE + TILE_SIZE * 0.5)
-				var shape := RectangleShape2D.new()
-				shape.size = Vector2(TILE_SIZE, TILE_SIZE)
-				var cshape := CollisionShape2D.new()
-				cshape.shape = shape
-				body.add_child(cshape)
-				if tileset_tex:
-					var atlas := AtlasTexture.new()
-					atlas.atlas = tileset_tex
-					atlas.region = wall_region
-					var sp := Sprite2D.new()
-					sp.texture = atlas
-					sp.scale = wall_scale
-					body.add_child(sp)
-				else:
-					var rect := ColorRect.new()
-					rect.size = Vector2(TILE_SIZE, TILE_SIZE)
-					rect.position = Vector2(-TILE_SIZE * 0.5, -TILE_SIZE * 0.5)
-					rect.color = Color(0.3, 0.15, 0.6)
-					body.add_child(rect)
-				wall_parent.add_child(body)
-
-
-func _build_nav_grid() -> void:
-	var layout := _resolve_maze()
-	if layout.is_empty():
-		return
-	var grid: Array = []
-	for row_str in layout:
-		var row: Array = []
-		for i in row_str.length():
-			row.append(row_str[i] == '.')
-		grid.append(row)
-	GameManager.nav_grid = grid
-
-
-func _generate_random_maze() -> PackedStringArray:
-	const W: int = 28
-	const H: int = 31
-	const LC_MAX: int = 12
-	const LR_MAX: int = 14
-
-	var grid: Array = []
-	for r in H:
-		var row: Array = []
-		for c in W:
-			row.append(true)
-		grid.append(row)
-
-	var visited: Dictionary = {}
-	var start := Vector2i(0, 0)
-	grid[1][1] = false
-	visited[start] = true
-	var stack: Array = [start]
-	var dirs: Array = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
-
-	while not stack.is_empty():
-		var cur: Vector2i = stack.back()
-		var nbrs: Array = []
-		for d: Vector2i in dirs:
-			var nxt := cur + d
-			if nxt.x < 0 or nxt.x > LC_MAX or nxt.y < 0 or nxt.y > LR_MAX:
-				continue
-			if visited.has(nxt):
-				continue
-			nbrs.append(nxt)
-		if nbrs.is_empty():
-			stack.pop_back()
-		else:
-			nbrs.shuffle()
-			var chosen: Vector2i = nbrs[0]
-			var d := chosen - cur
-			var wall_col: int = cur.x * 2 + 1 + d.x
-			var wall_row: int = cur.y * 2 + 1 + d.y
-			grid[wall_row][wall_col] = false
-			grid[chosen.y * 2 + 1][chosen.x * 2 + 1] = false
-			visited[chosen] = true
-			stack.append(chosen)
-
-	for r in range(1, H - 1):
-		for c in range(1, W - 1):
-			if not grid[r][c]:
-				continue
-			var is_h_wall: bool = (r % 2 == 1) and (c % 2 == 0)
-			var is_v_wall: bool = (r % 2 == 0) and (c % 2 == 1)
-			if not (is_h_wall or is_v_wall):
-				continue
-			var open_sides: bool = false
-			if is_h_wall:
-				open_sides = not grid[r][c - 1] and not grid[r][c + 1]
-			else:
-				open_sides = not grid[r - 1][c] and not grid[r + 1][c]
-			if open_sides and randf() < 0.42:
-				grid[r][c] = false
-
-	var ghost_rows: Array = [
-		"######.##.###..###.##.######",
-		"######.##.#......#.##.######",
-		"######....#......#....######",
-		"######.##.#......#.##.######",
-		"######.##.########.##.######",
-	]
-	for i in 5:
-		for c in W:
-			grid[12 + i][c] = ghost_rows[i][c] == "#"
-
-	grid[11][6] = false
-	grid[17][6] = false
-
-	for c in W:
-		grid[0][c] = true
-		grid[H - 1][c] = true
-	for r in H:
-		grid[r][0] = true
-		grid[r][W - 1] = true
-
-	var result := PackedStringArray()
-	for r in H:
-		var line := ""
-		for c in W:
-			line += "#" if grid[r][c] else "."
-		result.append(line)
-	return result
-
-
-func _add_wall_visuals() -> void:
-	var maze_walls := get_node_or_null("MazeWalls")
-	if not maze_walls:
-		return
-	for wall in maze_walls.get_children():
-		var cshape := wall.get_node_or_null("CollisionShape2D") as CollisionShape2D
-		if cshape and cshape.shape is RectangleShape2D:
-			var shape := cshape.shape as RectangleShape2D
-			var rect := ColorRect.new()
-			rect.size = shape.size
-			rect.position = cshape.position - shape.size / 2
-			rect.color = Color(0.25, 0.1, 0.5)
-			wall.add_child(rect)
+func _generate_maze() -> Dictionary:
+	return {}
 
 
 func _setup_level() -> void:
@@ -328,20 +81,23 @@ func _setup_level() -> void:
 		_player.add_to_group("player")
 		_player.died.connect(_on_player_died)
 		_player_spawn = _player.position
-	_add_wall_visuals()
-	_build_maze_walls()
-	_build_nav_grid()
 	var ghost_container := get_node_or_null("Ghosts")
 	if ghost_container:
 		for child in ghost_container.get_children():
 			var ghost := child as CharacterBody2D
 			if ghost:
 				_ghosts.append(ghost)
-				ghost.eaten.connect(_on_ghost_eaten)
+				ghost.eaten.connect(_on_ghost_eaten.bind(ghost))
+	var page_container := get_node_or_null("SpellPages")
+	if page_container:
+		_pages_remaining = page_container.get_child_count()
+		for page in page_container.get_children():
+			page.tree_exiting.connect(_on_page_collected.bind(page))
 
 
 func _on_player_died() -> void:
 	GameManager.lose_life()
+	_flash_ghost_positions()
 	if GameManager.lives > 0:
 		var timer := get_tree().create_timer(1.0)
 		timer.timeout.connect(_respawn_player)
@@ -352,8 +108,10 @@ func _respawn_player() -> void:
 		_player.respawn(_player_spawn)
 
 
-func _on_ghost_eaten() -> void:
-	GameManager.banish_ghost()
+func _on_ghost_eaten(ghost: CharacterBody2D) -> void:
+	var pts: int = GameManager.banish_ghost()
+	if ghost and is_instance_valid(ghost):
+		_spawn_floating_score(ghost.position, pts)
 
 
 func _on_banish_started() -> void:
@@ -375,6 +133,56 @@ func _restart_level() -> void:
 
 func _quit_to_title() -> void:
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+
+
+func _on_page_collected(page: Node) -> void:
+	if page and is_instance_valid(page):
+		_spawn_floating_score(page.position, GameManager.PAGE_SCORE)
+
+
+func _flash_ghost_positions() -> void:
+	for ghost in _ghosts:
+		if not ghost or not is_instance_valid(ghost):
+			continue
+		var flash := ColorRect.new()
+		flash.color = Color(1.0, 0.0, 0.0, 0.65)
+		flash.size = Vector2(TILE_SIZE, TILE_SIZE)
+		flash.position = ghost.position - Vector2(TILE_SIZE * 0.5, TILE_SIZE * 0.5)
+		flash.z_index = 50
+		add_child(flash)
+		var tween := create_tween()
+		tween.tween_property(flash, "color:a", 0.0, 1.2)
+		tween.tween_callback(flash.queue_free)
+
+
+func _spawn_floating_score(pos: Vector2, points: int) -> void:
+	var label := Label.new()
+	label.text = "+" + str(points)
+	label.position = pos - Vector2(20, 10)
+	label.z_index = 50
+	add_child(label)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 55, 0.75)
+	tween.tween_property(label, "modulate:a", 0.0, 0.75)
+	tween.set_parallel(false)
+	tween.tween_callback(label.queue_free)
+
+
+func _check_ghost_introductions() -> void:
+	if not _player or not _player.is_alive:
+		return
+	for ghost in _ghosts:
+		if not ghost or not is_instance_valid(ghost):
+			continue
+		var dist_tiles: float = _player.position.distance_to(ghost.position) / TILE_SIZE
+		if dist_tiles > INTRO_PROXIMITY_TILES:
+			continue
+		var intro_text: String = GameManager.try_introduce_ghost(ghost.ghost_type)
+		if intro_text != "":
+			if hud and hud.has_method("show_lore_popup"):
+				hud.show_lore_popup(intro_text)
+			break
 
 
 func complete() -> void:

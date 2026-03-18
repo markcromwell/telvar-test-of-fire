@@ -5,36 +5,20 @@ signal eaten
 enum GhostType { AEMON, ABYSSAL, UNDEAD, ELEMENTAL, HOUND }
 enum State { SCATTER, CHASE, FRIGHTENED, EATEN }
 
-@export var ghost_type: GhostType = GhostType.AEMON
-@export var is_hunter: bool = false
-@export var detection_range: float = 0.0  # 0 = use type default, set in _configure_type
+const GHOST_DISPLAY_NAMES: Dictionary = {
+	GhostType.AEMON: "Shade of Aemon",
+	GhostType.ABYSSAL: "Abyssal Wyrm",
+	GhostType.UNDEAD: "Undead",
+	GhostType.ELEMENTAL: "Veneficturis Daemon",
+	GhostType.HOUND: "Abyssal Hound of Fenrir",
+}
 
-const TILE_SIZE: int = 48
+@export var ghost_type: GhostType = GhostType.AEMON
+
+const TILE_SIZE: int = 24
 const BASE_SPEED: float = 90.0
 const SCATTER_TIME: float = 7.0
 const CHASE_TIME: float = 20.0
-const ANIM_FPS: float = 6.0
-
-# Sheet layout: rows = south/west/east/north, cols = 4 walk frames
-const DIR_ROW: Dictionary = {
-	Vector2.DOWN:  0,
-	Vector2.LEFT:  1,
-	Vector2.RIGHT: 2,
-	Vector2.UP:    3,
-}
-
-# Scatter corner targets (tile centres): each ghost heads to a fixed maze corner
-# Maze is 28x31 tiles at 32px. Formula: col*32+16, row*32+16
-# Central ghost house — all ghosts respawn here (tile col 14, row 14 centre)
-const GHOST_HOUSE: Vector2 = Vector2(696, 696)
-
-const SCATTER_TARGETS: Dictionary = {
-	0: Vector2(1272, 72),  # AEMON     — top-right
-	1: Vector2(72, 72),    # ABYSSAL   — top-left
-	2: Vector2(72, 1416),  # UNDEAD    — bottom-left
-	3: Vector2(1272, 1416),# ELEMENTAL — bottom-right
-	4: Vector2(672, 744),  # HOUND     — centre (never frightened, wanders)
-}
 
 var current_state: State = State.SCATTER
 var current_direction: Vector2 = Vector2.LEFT
@@ -44,143 +28,140 @@ var home_position: Vector2 = Vector2.ZERO
 var _state_timer: float = 0.0
 var _speed: float = BASE_SPEED
 var _is_invulnerable: bool = false
-var _health: int = 1
-var _anim_timer: float = 0.0
-var _anim_frame: int = 0
-var _flash_timer: float = 0.0
-var _kill_grace: float = 2.0  # cannot kill player during grace period (spawn or respawn)
+
+# Abyssal: flee when player faces within 4 tiles
+var _flee_timer: float = 0.0
+
+# Undead: 2-tile patrol loop
+var _patrol_origin: Vector2 = Vector2.ZERO
+var _patrol_dir: Vector2 = Vector2.RIGHT
+var _patrol_steps: int = 0
+var _is_patrolling: bool = false
+var _stagger_timer: float = 0.0
+
+# Hound: howl once on first detection
+var _has_howled: bool = false
+
+# Elemental: persistent cyan aura node
+var _aura_particles: CPUParticles2D = null
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var ray_cast: RayCast2D = $RayCast2D
 
 
-func _snap_to_tile_center() -> void:
-	# Ensure position is exactly at a tile centre to prevent wall-clipping drift
-	var tx: int = int(position.x / TILE_SIZE)
-	var ty: int = int(position.y / TILE_SIZE)
-	position = Vector2(tx * TILE_SIZE + TILE_SIZE * 0.5, ty * TILE_SIZE + TILE_SIZE * 0.5)
-	target_position = position
-
-
 func _ready() -> void:
-	add_to_group("ghosts")
-	_snap_to_tile_center()
 	home_position = position
 	target_position = position
 	collision_layer = 4
 	collision_mask = 1
 	_state_timer = SCATTER_TIME
-	_health = _get_hp()
-	if is_hunter:
-		current_state = State.CHASE
-		_state_timer = 9999.0
+	_patrol_origin = position
 	_configure_type()
 
 
-func _get_hp() -> int:
-	var base: int = GameManager.current_level * 2
-	match ghost_type:
-		GhostType.ABYSSAL:  return maxi(1, int(base * 0.5))   # squishy
-		GhostType.UNDEAD:   return int(base * 2.0)             # tanky
-		GhostType.HOUND:    return maxi(1, int(base * 0.75))   # fast but fragile
-		_:                  return base
-
-
-const GHOST_SHEET_PATHS: Dictionary = {
-	0: "res://assets/sprites/ghosts/aemon_guardian_walk_sheet.png",
-	1: "res://assets/sprites/ghosts/abyssal_creature_walk_sheet.png",
-	2: "res://assets/sprites/ghosts/undead_walk_sheet.png",
-	3: "res://assets/sprites/ghosts/elemental_guardian_walk_sheet.png",
-	4: "res://assets/sprites/ghosts/hound_fenrir_walk_sheet.png",
-}
-
-
 func _configure_type() -> void:
-	# Speed: hunters use a fixed multiplier; others get type-specific values
-	if is_hunter:
-		_speed = BASE_SPEED * 1.35
-	# Detection range and type-specific behaviour (runs for all ghosts)
 	match ghost_type:
 		GhostType.AEMON:
-			if not is_hunter: _speed = BASE_SPEED * 1.15
-			if detection_range == 0.0: detection_range = 336.0   # 7 tiles
+			_speed = BASE_SPEED * 1.1
+			if sprite:
+				sprite.modulate = Color(1.0, 0.0, 0.0)
 		GhostType.ABYSSAL:
-			if not is_hunter: _speed = BASE_SPEED * 0.9
-			if detection_range == 0.0: detection_range = 288.0   # 6 tiles
+			_speed = BASE_SPEED
+			if sprite:
+				sprite.modulate = Color(1.0, 0.5, 0.8)
 		GhostType.UNDEAD:
-			if not is_hunter: _speed = BASE_SPEED * 0.65
-			if detection_range == 0.0: detection_range = 240.0   # 5 tiles
+			_speed = BASE_SPEED * 0.8
+			if sprite:
+				sprite.modulate = Color(0.3, 0.8, 1.0)
 		GhostType.ELEMENTAL:
-			if not is_hunter: _speed = BASE_SPEED * 1.05
+			_speed = BASE_SPEED * 0.9
 			_is_invulnerable = true
-			if detection_range == 0.0: detection_range = 96.0    # 2 tiles
+			if sprite:
+				sprite.modulate = Color(1.0, 0.6, 0.0)
+			_setup_elemental_aura()
 		GhostType.HOUND:
-			if not is_hunter: _speed = BASE_SPEED * 1.45
-			if detection_range == 0.0: detection_range = 432.0   # 9 tiles
-	# Sprite — always load so no ghost is invisible
-	if sprite:
-		var path: String = GHOST_SHEET_PATHS.get(int(ghost_type), "")
-		var loaded := false
-		if path != "":
-			var img := Image.new()
-			if img.load(path) == OK:
-				sprite.texture = ImageTexture.create_from_image(img)
-				sprite.hframes = 4
-				sprite.vframes = 4
-				sprite.scale = Vector2(48.0 / 64.0, 48.0 / 64.0)
-				sprite.modulate = Color.WHITE
-				loaded = true
-		if not loaded:
-			var fallback := Image.create(20, 20, false, Image.FORMAT_RGBA8)
-			fallback.fill(Color.WHITE)
-			sprite.texture = ImageTexture.create_from_image(fallback)
-			sprite.scale = Vector2(1.2, 1.2)
-		# Hunter tint applied after load (overrides WHITE)
-		if is_hunter and current_state != State.FRIGHTENED:
-			sprite.modulate = Color(1.0, 0.55, 0.55)
-	_update_sprite_frame()
+			_speed = BASE_SPEED * 1.2
+			if sprite:
+				sprite.modulate = Color(0.4, 0.0, 0.0)
 
 
-func _tick_anim(delta: float) -> void:
-	_anim_timer += delta
-	if _anim_timer >= 1.0 / ANIM_FPS:
-		_anim_timer = 0.0
-		_anim_frame = (_anim_frame + 1) % 4
-		_update_sprite_frame()
-
-
-func _update_sprite_frame() -> void:
-	if sprite and sprite.hframes == 4:
-		var row: int = DIR_ROW.get(current_direction, 0)
-		sprite.frame = row * 4 + _anim_frame
+func _setup_elemental_aura() -> void:
+	if _aura_particles != null:
+		return
+	_aura_particles = CPUParticles2D.new()
+	_aura_particles.emitting = true
+	_aura_particles.one_shot = false
+	_aura_particles.amount = 8
+	_aura_particles.lifetime = 1.0
+	_aura_particles.explosiveness = 0.0
+	_aura_particles.direction = Vector2.ZERO
+	_aura_particles.spread = 180.0
+	_aura_particles.initial_velocity_min = 5.0
+	_aura_particles.initial_velocity_max = 15.0
+	_aura_particles.gravity = Vector2.ZERO
+	_aura_particles.color = Color(0.0, 0.9, 1.0, 0.4)
+	_aura_particles.position = Vector2.ZERO
+	add_child(_aura_particles)
 
 
 func _physics_process(delta: float) -> void:
-	if _kill_grace > 0.0:
-		_kill_grace -= delta
-	if current_state == State.EATEN:
-		return
 	_update_state_timer(delta)
-	if current_state == State.FRIGHTENED:
-		_flash_timer += delta
-		if _flash_timer >= 0.18:
-			_flash_timer = 0.0
-			if sprite:
-				var bright: bool = sprite.modulate.b > 0.7
-				sprite.modulate = Color(0.2, 0.3, 0.6) if bright else Color(0.5, 0.6, 1.0)
+	_update_abyssal_flee(delta)
+	_update_undead_stagger(delta)
+	_check_hound_howl()
+	if _stagger_timer > 0.0:
+		return
 	if is_moving:
 		_move_ghost(delta)
-		_tick_anim(delta)
 	else:
-		_decide_next_move()
+		_choose_next_direction()
+
+
+func _update_abyssal_flee(delta: float) -> void:
+	if ghost_type != GhostType.ABYSSAL:
+		return
+	if _flee_timer > 0.0:
+		_flee_timer -= delta
+		return
+	if current_state == State.FRIGHTENED or current_state == State.EATEN:
+		return
+	var player := _find_player()
+	if player == null:
+		return
+	var to_ghost: Vector2 = global_position - player.global_position
+	var dist_tiles: float = to_ghost.length() / TILE_SIZE
+	if dist_tiles > 4.0:
+		return
+	var player_dir: Vector2 = player.current_direction
+	if player_dir == Vector2.ZERO:
+		return
+	var dot: float = player_dir.dot(to_ghost.normalized())
+	if dot > 0.5:
+		_flee_timer = 2.0
+
+
+func _update_undead_stagger(delta: float) -> void:
+	if _stagger_timer > 0.0:
+		_stagger_timer -= delta
+
+
+func _check_hound_howl() -> void:
+	if ghost_type != GhostType.HOUND or _has_howled:
+		return
+	if current_state == State.EATEN:
+		return
+	var player := _find_player()
+	if player == null:
+		return
+	var dist: float = global_position.distance_to(player.global_position)
+	if dist <= TILE_SIZE * 8.0:
+		_has_howled = true
+		AudioManager.play_howl()
 
 
 func _update_state_timer(delta: float) -> void:
 	if current_state == State.FRIGHTENED or current_state == State.EATEN:
-		return
-	if is_hunter:
-		current_state = State.CHASE
 		return
 	_state_timer -= delta
 	if _state_timer <= 0.0:
@@ -192,199 +173,259 @@ func _update_state_timer(delta: float) -> void:
 			_state_timer = SCATTER_TIME
 
 
+func _choose_next_direction() -> void:
+	var directions: Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
+	var valid_dirs: Array[Vector2] = []
+	for dir in directions:
+		if dir == -current_direction:
+			continue
+		if _can_move_dir(dir):
+			valid_dirs.append(dir)
+	if valid_dirs.is_empty():
+		if _can_move_dir(-current_direction):
+			valid_dirs.append(-current_direction)
+		else:
+			return
+	var chosen: Vector2 = _pick_direction(valid_dirs)
+	current_direction = chosen
+	target_position = position + chosen * TILE_SIZE
+	is_moving = true
+
+
+func _pick_direction(valid_dirs: Array[Vector2]) -> Vector2:
+	if current_state == State.FRIGHTENED:
+		return valid_dirs[randi() % valid_dirs.size()]
+	if current_state == State.EATEN:
+		return _dir_toward(home_position, valid_dirs)
+	if current_state == State.SCATTER and _should_scatter_toward_page():
+		var page_target := _get_nearest_uncollected_page()
+		if page_target != Vector2.ZERO:
+			return _dir_toward(page_target, valid_dirs)
+	match ghost_type:
+		GhostType.AEMON:
+			var player := _find_player()
+			if player:
+				return _dir_toward(player.global_position, valid_dirs)
+		GhostType.ABYSSAL:
+			return _pick_abyssal_direction(valid_dirs)
+		GhostType.UNDEAD:
+			return _pick_undead_direction(valid_dirs)
+		GhostType.ELEMENTAL:
+			return valid_dirs[randi() % valid_dirs.size()]
+		GhostType.HOUND:
+			var player := _find_player()
+			if player:
+				return _dir_toward(player.global_position, valid_dirs)
+	return valid_dirs[randi() % valid_dirs.size()]
+
+
+func _pick_abyssal_direction(valid_dirs: Array[Vector2]) -> Vector2:
+	var player := _find_player()
+	if player == null:
+		return valid_dirs[randi() % valid_dirs.size()]
+	# Fleeing: move away from player
+	if _flee_timer > 0.0:
+		return _dir_away_from(player.global_position, valid_dirs)
+	# Lateral ambush: target a position perpendicular to player's direction
+	var player_dir: Vector2 = player.current_direction
+	if player_dir == Vector2.ZERO:
+		player_dir = Vector2.RIGHT
+	var lateral: Vector2 = Vector2(player_dir.y, -player_dir.x)
+	var to_ghost: Vector2 = global_position - player.global_position
+	if lateral.dot(to_ghost) < 0.0:
+		lateral = -lateral
+	var ambush_target: Vector2 = player.global_position + lateral * TILE_SIZE * 4
+	return _dir_toward(ambush_target, valid_dirs)
+
+
+func _pick_undead_direction(valid_dirs: Array[Vector2]) -> Vector2:
+	var player := _find_player()
+	if player == null:
+		_is_patrolling = true
+	else:
+		var dist_tiles: float = global_position.distance_to(player.global_position) / TILE_SIZE
+		if dist_tiles <= 5.0:
+			_is_patrolling = false
+			if GameManager.spell_meter > 0.5:
+				_speed = BASE_SPEED * 1.2
+			else:
+				_speed = BASE_SPEED * 0.8
+			return _dir_toward(player.global_position, valid_dirs)
+		else:
+			_is_patrolling = true
+			_speed = BASE_SPEED * 0.8
+	# Patrol: 2-tile back-and-forth
+	_patrol_steps += 1
+	if _patrol_steps >= 2:
+		_patrol_steps = 0
+		_patrol_dir = -_patrol_dir
+	if _patrol_dir in valid_dirs:
+		return _patrol_dir
+	return valid_dirs[randi() % valid_dirs.size()]
+
+
+func _dir_away_from(target: Vector2, valid_dirs: Array[Vector2]) -> Vector2:
+	var best_dir: Vector2 = valid_dirs[0]
+	var best_dist: float = -INF
+	for dir in valid_dirs:
+		var next_pos: Vector2 = position + dir * TILE_SIZE
+		var dist: float = next_pos.distance_squared_to(target)
+		if dist > best_dist:
+			best_dist = dist
+			best_dir = dir
+	return best_dir
+
+
+func _dir_toward(target: Vector2, valid_dirs: Array[Vector2]) -> Vector2:
+	var best_dir: Vector2 = valid_dirs[0]
+	var best_dist: float = INF
+	for dir in valid_dirs:
+		var next_pos: Vector2 = position + dir * TILE_SIZE
+		var dist: float = next_pos.distance_squared_to(target)
+		if dist < best_dist:
+			best_dist = dist
+			best_dir = dir
+	return best_dir
+
+
 func _move_ghost(delta: float) -> void:
-	var move_vec: Vector2 = (target_position - position).normalized() * _speed * delta
-	if position.distance_to(target_position) <= _speed * delta:
+	var spd: float = _speed
+	if current_state == State.FRIGHTENED:
+		spd *= 0.5
+	elif current_state == State.EATEN:
+		spd *= 2.0
+	var move_vec: Vector2 = (target_position - position).normalized() * spd * delta
+	if position.distance_to(target_position) <= spd * delta:
 		position = target_position
 		is_moving = false
+		if current_state == State.EATEN and position.distance_to(home_position) < TILE_SIZE:
+			current_state = State.SCATTER
+			_state_timer = SCATTER_TIME
+			if sprite:
+				sprite.modulate.a = 1.0
 	else:
 		position += move_vec
 
 
-func _decide_next_move() -> void:
-	var bfs_dir := _astar_direction()
-	if bfs_dir != Vector2.ZERO:
-		current_direction = bfs_dir
-		target_position = position + bfs_dir * TILE_SIZE
-		is_moving = true
-		_update_sprite_frame()
-	else:
-		var dirs := [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
-		dirs.shuffle()
-		for d in dirs:
-			if _can_move_dir(d):
-				current_direction = d
-				target_position = position + d * TILE_SIZE
-				is_moving = true
-				_update_sprite_frame()
-				break
-
-
-func _pos_to_tile(pos: Vector2) -> Vector2i:
-	return Vector2i(int(pos.x / TILE_SIZE), int(pos.y / TILE_SIZE))
-
-
-func _tile_walkable(tile: Vector2i) -> bool:
-	# Use the nav_grid built from the actual maze — no raycasts, no corner-clipping bugs
-	var grid := GameManager.nav_grid
-	if grid.is_empty():
-		return true  # fallback: assume open if grid not ready
-	if tile.y < 0 or tile.y >= grid.size():
-		return false
-	var row: Array = grid[tile.y]
-	if tile.x < 0 or tile.x >= row.size():
-		return false
-	return bool(row[tile.x])
-
-
-func _astar_direction() -> Vector2:
-	var target := _get_bfs_target()
-	if target == Vector2.ZERO:
-		return Vector2.ZERO
-	var from_tile := _pos_to_tile(position)
-	var to_tile   := _pos_to_tile(target)
-	if from_tile == to_tile:
-		return Vector2.ZERO
-
-	# A* with Manhattan heuristic
-	# open entries: [f, g, tile_x, tile_y, step_x, step_y]
-	var open: Array = []
-	var h0: int = abs(from_tile.x - to_tile.x) + abs(from_tile.y - to_tile.y)
-	open.append([h0, 0, from_tile.x, from_tile.y, 0, 0])
-	var g_score: Dictionary = {from_tile: 0}
-	const DIRS: Array[Vector2i] = [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]
-
-	while open.size() > 0:
-		# Pop lowest f (linear scan — grid is small, this is fine)
-		var best := 0
-		for i in range(1, open.size()):
-			if open[i][0] < open[best][0]:
-				best = i
-		var cur: Array = open[best]
-		open.remove_at(best)
-
-		var tile   := Vector2i(cur[2], cur[3])
-		var step   := Vector2(cur[4], cur[5])
-		var cur_g: int = cur[1]
-
-		if tile == to_tile:
-			return step
-
-		if cur_g > g_score.get(tile, 999999):
-			continue  # stale entry
-
-		for d: Vector2i in DIRS:
-			var next: Vector2i = tile + d
-			if not _tile_walkable(next):
-				continue
-			var new_g: int = cur_g + 1
-			if new_g >= g_score.get(next, 999999):
-				continue
-			g_score[next] = new_g
-			var h: int = abs(next.x - to_tile.x) + abs(next.y - to_tile.y)
-			var sx: float = float(d.x) if step == Vector2.ZERO else step.x
-			var sy: float = float(d.y) if step == Vector2.ZERO else step.y
-			open.append([new_g + h, new_g, next.x, next.y, sx, sy])
-
-	return Vector2.ZERO
-
-
-func _get_bfs_target() -> Vector2:
-	var player := get_tree().get_first_node_in_group("player")
-	if not player:
-		return Vector2.ZERO
-	# Proximity override: if player is within detection range, go straight for them
-	if detection_range > 0.0 and current_state != State.FRIGHTENED and current_state != State.EATEN:
-		if position.distance_to(player.global_position) <= detection_range:
-			return player.global_position
-	match current_state:
-		State.SCATTER:
-			return SCATTER_TARGETS.get(int(ghost_type), home_position)
-		State.CHASE:
-			if is_hunter:
-				return player.global_position
-			return player.global_position + player.get("current_direction") * TILE_SIZE * 4
-		State.FRIGHTENED:
-			var away: Vector2 = position - player.global_position
-			return position + away * 3.0
-		State.EATEN:
-			return home_position
-	return Vector2.ZERO
-
-
 func _can_move_dir(direction: Vector2) -> bool:
-	return _tile_walkable(_pos_to_tile(position + direction * TILE_SIZE))
+	ray_cast.target_position = direction * TILE_SIZE
+	ray_cast.force_raycast_update()
+	return not ray_cast.is_colliding()
 
 
-func set_speed(speed: float) -> void:
-	_speed = speed
+func _find_player() -> Node2D:
+	var players := get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		return players[0] as Node2D
+	return null
 
 
-func take_damage(amount: int = 1) -> void:
-	if current_state == State.EATEN:
-		return
+func get_banished() -> void:
 	if _is_invulnerable:
-		AudioManager.play_spell_ineffective()
+		if ghost_type == GhostType.ELEMENTAL:
+			_spawn_immune_feedback()
 		return
-	_health -= amount
-	AudioManager.play_ghost_hit()
-	if _health <= 0:
-		get_eaten()
-	else:
+	if ghost_type == GhostType.UNDEAD:
+		_stagger_timer = 0.5
+	if current_state == State.FRIGHTENED:
+		current_state = State.EATEN
 		if sprite:
-			var tween := create_tween()
-			tween.tween_property(sprite, "modulate", Color(1.0, 0.3, 0.3), 0.05)
-			tween.tween_property(sprite, "modulate", sprite.modulate, 0.1)
+			sprite.modulate.a = 0.3
+		_spawn_eaten_particles()
+		eaten.emit()
+
+
+func _spawn_immune_feedback() -> void:
+	# Cyan ripple particles
+	var ripple := CPUParticles2D.new()
+	ripple.emitting = true
+	ripple.one_shot = true
+	ripple.explosiveness = 0.8
+	ripple.amount = 12
+	ripple.lifetime = 0.6
+	ripple.direction = Vector2.ZERO
+	ripple.spread = 180.0
+	ripple.initial_velocity_min = 20.0
+	ripple.initial_velocity_max = 50.0
+	ripple.gravity = Vector2.ZERO
+	ripple.color = Color(0.0, 0.9, 1.0, 0.7)
+	ripple.position = Vector2.ZERO
+	add_child(ripple)
+	var ripple_timer := get_tree().create_timer(0.7)
+	ripple_timer.timeout.connect(ripple.queue_free)
+	# IMMUNE floating label
+	var label := Label.new()
+	label.text = "IMMUNE"
+	label.add_theme_font_size_override("font_size", 10)
+	label.add_theme_color_override("font_color", Color(0.0, 1.0, 1.0))
+	label.position = Vector2(-18, -28)
+	add_child(label)
+	var tween := create_tween()
+	tween.tween_property(label, "position:y", label.position.y - 20, 0.8)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.8)
+	tween.tween_callback(label.queue_free)
 
 
 func enter_frightened() -> void:
-	if _is_invulnerable or current_state == State.EATEN:
+	if _is_invulnerable:
 		return
-	current_state = State.FRIGHTENED
-	_speed = BASE_SPEED * 0.5
-	_flash_timer = 0.0
-	_configure_type()
-	AudioManager.play_ghost_frightened()
-	if sprite:
-		sprite.modulate = Color(0.2, 0.3, 0.6)
+	if current_state != State.EATEN:
+		current_state = State.FRIGHTENED
+		if sprite:
+			sprite.modulate = Color(0.2, 0.2, 1.0)
 
 
 func exit_frightened() -> void:
-	if current_state == State.EATEN:
-		return
-	current_state = State.SCATTER
-	_state_timer = SCATTER_TIME
-	_speed = BASE_SPEED
-	_flash_timer = 0.0
-	_health = _get_hp()
-	_configure_type()
+	if current_state == State.FRIGHTENED:
+		current_state = State.SCATTER
+		_state_timer = SCATTER_TIME
+		_configure_type()
 
 
-func get_eaten() -> void:
-	if _is_invulnerable or current_state == State.EATEN:
-		return
-	current_state = State.EATEN
-	is_moving = false
-	collision_layer = 0  # stop blocking player
-	visible = false
-	AudioManager.play_ghost_eaten()
-	eaten.emit()
-	get_tree().create_timer(30.0).timeout.connect(_respawn)
+func _spawn_eaten_particles() -> void:
+	var particles := CPUParticles2D.new()
+	particles.emitting = true
+	particles.one_shot = true
+	particles.explosiveness = 1.0
+	particles.amount = 15
+	particles.lifetime = 0.5
+	particles.direction = Vector2.ZERO
+	particles.spread = 180.0
+	particles.initial_velocity_min = 30.0
+	particles.initial_velocity_max = 60.0
+	particles.gravity = Vector2.ZERO
+	particles.color = Color(0.2, 0.4, 1.0)
+	particles.position = Vector2.ZERO
+	add_child(particles)
+	var timer := get_tree().create_timer(0.6)
+	timer.timeout.connect(particles.queue_free)
 
 
-func _respawn() -> void:
-	if not is_instance_valid(self):
-		return
-	AudioManager.play_ghost_respawn()
-	position = GHOST_HOUSE
-	_snap_to_tile_center()
-	_health = _get_hp()
-	current_state = State.SCATTER
-	_state_timer = SCATTER_TIME
-	_speed = BASE_SPEED
-	_flash_timer = 0.0
-	_kill_grace = 2.5  # grace period — won't kill player immediately on respawn
-	is_moving = false
-	collision_layer = 4
-	visible = true
-	_configure_type()
+func _should_scatter_toward_page() -> bool:
+	if GameManager.current_level != 6:
+		return false
+	if GameManager.uncollected_page_positions.is_empty():
+		return false
+	return randf() < 0.45
+
+
+func _get_nearest_uncollected_page() -> Vector2:
+	var pages := GameManager.uncollected_page_positions
+	if pages.is_empty():
+		return Vector2.ZERO
+	var nearest: Vector2 = pages[0]
+	var best_dist: float = global_position.distance_squared_to(pages[0])
+	for i in range(1, pages.size()):
+		var dist: float = global_position.distance_squared_to(pages[i])
+		if dist < best_dist:
+			best_dist = dist
+			nearest = pages[i]
+	return nearest
+
+
+func get_display_name() -> String:
+	return GHOST_DISPLAY_NAMES.get(ghost_type, "Unknown Shade")
+
+
+func set_invulnerable(val: bool) -> void:
+	_is_invulnerable = val

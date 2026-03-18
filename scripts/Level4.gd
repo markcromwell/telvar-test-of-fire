@@ -1,19 +1,59 @@
 extends "res://scripts/LevelBase.gd"
 
+var _page8_popup_shown: bool = false
+
 
 func _ready() -> void:
 	level_number = 4
 	level_name = "LENS COMPLEX"
 	super._ready()
+	GameManager.spell_meter_changed.connect(_on_spell_meter_changed)
 
 
-func _get_tileset_path() -> String:
-	return "res://assets/tilesets/level1_wall.png"
+func _get_maze_layout() -> Array:
+	return [
+		"############################",
+		"#..........................#",
+		"#..........................#",
+		"#...##................##...#",
+		"#...##................##...#",
+		"#..........................#",
+		"#..........................#",
+		"#........##.......##.......#",
+		"#........##.......##.......#",
+		"#..........................#",
+		"#...##................##...#",
+		"#...##................##...#",
+		"#.........###DD###.........#",
+		"#.........#GGGGGG#.........#",
+		"#.........#GGGGGG#.........#",
+		"#.........#GGGGGG#.........#",
+		"#.........########.........#",
+		"#..........................#",
+		"#..........................#",
+		"#..........................#",
+		"#...##................##...#",
+		"#...##................##...#",
+		"#..........................#",
+		"#..........................#",
+		"#........##.......##.......#",
+		"#........##.......##.......#",
+		"#..........................#",
+		"#...##................##...#",
+		"#...##................##...#",
+		"#..........................#",
+		"############################",
+	]
 
 
-func _get_floor_tile_path() -> String:
-	return "res://assets/tilesets/level1_floor.png"
+func _generate_maze() -> Dictionary:
+	return {"layout": _get_maze_layout()}
 
 
-func _get_floor_tint() -> Color:
-	return Color(0.2, 0.8, 0.2, 1.0)
+func _on_spell_meter_changed(_value: float) -> void:
+	if _page8_popup_shown:
+		return
+	if GameManager.spell_pages_collected >= 8:
+		_page8_popup_shown = true
+		if hud and hud.has_method("show_lore_popup"):
+			hud.show_lore_popup("The eighth seal. Myramar said there were seven.")

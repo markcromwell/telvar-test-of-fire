@@ -2,28 +2,16 @@ extends CharacterBody2D
 
 signal died
 
-const TILE_SIZE: int = 48
+const TILE_SIZE: int = 24
 const SPEED: float = 120.0
-const ANIM_FPS: float = 8.0
+const SPELL_COOLDOWN: float = 0.3
 
-# Sheet layout: rows = south/west/east/north, cols = 4 walk frames
-const DIR_ROW: Dictionary = {
-	Vector2.DOWN:  0,
-	Vector2.LEFT:  1,
-	Vector2.RIGHT: 2,
-	Vector2.UP:    3,
-}
-
-var current_direction: Vector2 = Vector2.DOWN
+var current_direction: Vector2 = Vector2.ZERO
 var queued_direction: Vector2 = Vector2.ZERO
 var target_position: Vector2 = Vector2.ZERO
 var is_moving: bool = false
 var is_alive: bool = true
-var is_invulnerable: bool = false  # true during post-respawn grace window
-var _invuln_timer: float = 0.0
-var _fire_cooldown: float = 0.0
-var _anim_timer: float = 0.0
-var _anim_frame: int = 0
+var _spell_cooldown_timer: float = 0.0
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var sprite: Sprite2D = $Sprite2D
@@ -31,58 +19,21 @@ var _anim_frame: int = 0
 
 
 func _ready() -> void:
-	add_to_group("player")
 	target_position = position
 	collision_layer = 2
 	collision_mask = 1
-	if sprite and not sprite.texture:
-		var img := Image.new()
-		if img.load("res://assets/sprites/player/telvar_walk_sheet_128.png") == OK:
-			sprite.texture = ImageTexture.create_from_image(img)
-			sprite.hframes = 4
-			sprite.vframes = 4
-			sprite.scale = Vector2(64.0 / 128.0, 64.0 / 128.0)
-		else:
-			var fallback := Image.create(20, 20, false, Image.FORMAT_RGBA8)
-			fallback.fill(Color(0.2, 0.8, 1.0))
-			sprite.texture = ImageTexture.create_from_image(fallback)
-	_update_sprite_frame()
 
 
 func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
-	if _invuln_timer > 0.0:
-		_invuln_timer -= delta
-		if _invuln_timer <= 0.0:
-			is_invulnerable = false
-			modulate.a = 1.0
-	if _fire_cooldown > 0.0:
-		_fire_cooldown -= delta
-	if Input.is_action_just_pressed("fire_spell") and _fire_cooldown <= 0.0 and GameManager.can_fire_spell():
-		_fire_spell()
+	if _spell_cooldown_timer > 0.0:
+		_spell_cooldown_timer -= delta
 	_read_input()
 	if is_moving:
 		_move_toward_target(delta)
-		_tick_anim(delta)
 	else:
 		_try_move()
-		_anim_frame = 0
-		_update_sprite_frame()
-
-
-func _tick_anim(delta: float) -> void:
-	_anim_timer += delta
-	if _anim_timer >= 1.0 / ANIM_FPS:
-		_anim_timer = 0.0
-		_anim_frame = (_anim_frame + 1) % 4
-		_update_sprite_frame()
-
-
-func _update_sprite_frame() -> void:
-	if sprite and sprite.hframes == 4:
-		var row: int = DIR_ROW.get(current_direction, 0)
-		sprite.frame = row * 4 + _anim_frame
 
 
 func _read_input() -> void:
@@ -97,6 +48,8 @@ func _read_input() -> void:
 		input_dir = Vector2.RIGHT
 	if input_dir != Vector2.ZERO:
 		queued_direction = input_dir
+	if Input.is_action_just_pressed("cast_spell"):
+		_try_cast_spell()
 
 
 func _try_move() -> void:
@@ -117,8 +70,6 @@ func _move_toward_target(delta: float) -> void:
 		is_moving = false
 	else:
 		position += move_vec
-	position.x = clampf(position.x, 24.0, 1320.0)
-	position.y = clampf(position.y, 24.0, 1464.0)
 
 
 func _can_move(direction: Vector2) -> bool:
@@ -131,7 +82,6 @@ func hit_by_ghost() -> void:
 	if not is_alive:
 		return
 	is_alive = false
-	AudioManager.play_player_death()
 	_spawn_death_particles()
 	died.emit()
 
@@ -155,85 +105,30 @@ func _spawn_death_particles() -> void:
 	timer.timeout.connect(particles.queue_free)
 
 
-func _fire_spell() -> void:
-	_fire_cooldown = 0.4
-	GameManager.spend_mana(10.0)
-	AudioManager.play_spell_fire()
-	var ProjScript := load("res://scripts/SpellProjectile.gd")
-	var proj: Area2D = ProjScript.new()
-	var fire_dir := _get_fire_direction()
-	proj.direction = fire_dir
-	proj.damage = GameManager.spell_tier + 1
-	proj.position = position + fire_dir * 14.0
-	get_parent().add_child(proj)
+func _try_cast_spell() -> void:
+	if _spell_cooldown_timer > 0.0:
+		return
+	if not GameManager.can_cast_spell():
+		return
+	var fire_dir: Vector2 = current_direction if current_direction != Vector2.ZERO else Vector2.RIGHT
+	if not GameManager.spend_mana_for_spell():
+		return
+	cast_spell(fire_dir, GameManager.spell_tier)
+	_spell_cooldown_timer = SPELL_COOLDOWN
 
 
-func _dir_clear(dir: Vector2) -> bool:
-	var grid := GameManager.nav_grid
-	if grid.is_empty():
-		return true
-	var next_tile := Vector2i(
-		int((position.x + dir.x * TILE_SIZE) / TILE_SIZE),
-		int((position.y + dir.y * TILE_SIZE) / TILE_SIZE)
-	)
-	if next_tile.y < 0 or next_tile.y >= grid.size():
-		return false
-	var row: Array = grid[next_tile.y]
-	if next_tile.x < 0 or next_tile.x >= row.size():
-		return false
-	return bool(row[next_tile.x])
-
-
-func _get_fire_direction() -> Vector2:
-	const AIM_RANGE: float = 336.0  # 7 tiles
-	var ghosts := get_tree().get_nodes_in_group("ghosts")
-	var dirs: Array[Vector2] = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
-	# Facing direction takes priority — if a ghost is ahead and path is clear, fire as normal
-	var facing: Vector2 = current_direction if current_direction != Vector2.ZERO else Vector2.RIGHT
-	if _dir_clear(facing):
-		for ghost in ghosts:
-			if not is_instance_valid(ghost):
-				continue
-			if ghost.get("current_state") == 3:  # State.EATEN — skip invisible ghosts
-				continue
-			var diff: Vector2 = ghost.global_position - global_position
-			if diff.length() < AIM_RANGE and diff.normalized().dot(facing) > 0.7:
-				return facing
-	# No ghost ahead (or wall in the way) — snap to nearest ghost in any open cardinal direction
-	var best_dir: Vector2 = facing
-	var best_dist: float = AIM_RANGE + 1.0
-	for ghost in ghosts:
-		if not is_instance_valid(ghost):
-			continue
-		if ghost.get("current_state") == 3:
-			continue
-		var diff: Vector2 = ghost.global_position - global_position
-		var dist: float = diff.length()
-		if dist >= best_dist:
-			continue
-		var norm: Vector2 = diff.normalized()
-		for d: Vector2 in dirs:
-			if norm.dot(d) > 0.7 and _dir_clear(d):
-				best_dist = dist
-				best_dir = d
-				break
-	# Fallback: if best_dir is blocked, use any open direction
-	if not _dir_clear(best_dir):
-		for d: Vector2 in dirs:
-			if _dir_clear(d):
-				return d
-	return best_dir
+func cast_spell(dir: Vector2, spell_tier: int) -> void:
+	var SpellProjectile: Script = load("res://scripts/SpellProjectile.gd")
+	var projectiles: Array[Area2D] = SpellProjectile.create_projectile(spell_tier, global_position, dir)
+	for proj in projectiles:
+		get_parent().add_child(proj)
 
 
 func respawn(spawn_pos: Vector2) -> void:
 	position = spawn_pos
 	target_position = spawn_pos
-	current_direction = Vector2.DOWN
+	current_direction = Vector2.ZERO
 	queued_direction = Vector2.ZERO
 	is_moving = false
 	is_alive = true
-	is_invulnerable = true
-	_invuln_timer = 2.5  # 2.5s grace after respawn — ghosts can't kill
-	modulate.a = 0.5     # visual cue: semi-transparent while invulnerable
-	_anim_frame = 0
-	_update_sprite_frame()
+	modulate.a = 1.0

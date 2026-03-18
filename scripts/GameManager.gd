@@ -3,16 +3,13 @@ extends Node
 signal score_changed(new_score: int)
 signal lives_changed(new_lives: int)
 signal spell_meter_changed(value: float)
+signal mana_changed(new_mana: int)
+signal spell_tier_changed(new_tier: int)
 signal level_completed(level_num: int)
 signal game_over
 signal banish_mode_started
 signal banish_mode_ended
 signal page_collected(page_name: String)
-signal mana_changed(current: float, max_val: float)
-signal spell_tier_changed(tier: int)
-signal bonus_item_available
-signal ghost_radar_started
-signal ghost_radar_ended
 
 const MAX_LIVES: int = 3
 const TOTAL_SPELL_PAGES: int = 12
@@ -20,28 +17,43 @@ const BANISH_DURATION: float = 8.0
 const GHOST_SCORES: Array[int] = [50, 100, 200, 400]
 const PAGE_SCORE: int = 10
 const LEVEL_COUNT: int = 7
-
-var nav_grid: Array = []  # Array[Array[bool]]; nav_grid[row][col] = true if walkable
+const MAX_MANA: int = 100
+const MANA_COSTS: Array[int] = [8, 8, 10, 10, 14, 14, 20]
+const MAX_SPELL_TIER: int = 6
 
 var score: int = 0
 var lives: int = MAX_LIVES
 var spell_pages_collected: int = 0
 var spell_meter: float = 0.0
+var mana: int = 0
+var spell_tier: int = 0
 var current_level: int = 1
 var is_banish_mode: bool = false
 var ghost_combo: int = 0
-var spell_tier: int = 0
-var mana: float = 30.0
-var max_mana: float = 30.0
-var _mana_regen_timer: float = 0.0
 var level_time: float = 0.0
 var is_game_active: bool = false
+var uncollected_page_positions: Array[Vector2] = []
+
+var current_maze: Dictionary = {}
 
 var _banish_timer: float = 0.0
-var _bonus_item_emitted: bool = false
-var _score_multiplier: int = 1
-var _score_multiplier_timer: float = 0.0
-var _ghost_radar_timer: float = 0.0
+var _mana_regen_accumulator: float = 0.0
+var _mana_emit_accumulator: float = 0.0
+var _introduced_ghosts: Array[int] = []
+
+const GHOST_INTRO_TEXTS: Dictionary = {
+	0: "The Shade of Aemon — once Telvar's mentor, now bound to the Trial as its most relentless pursuer.",
+	1: "The Abyssal Wyrm — summoned from the deep rift, it strikes from angles no mortal can predict.",
+	2: "The Undead — remnants of failed candidates, cursed to patrol the maze they could not escape.",
+	3: "Veneficturis Daemon — an elemental bound by Myramar's seal, immune to banishment.",
+	4: "The Hound of Fenrir — loosed only when the overseers want the Trial to end in death.",
+}
+
+const TILE_SIZE: int = 24
+const MANA_REGEN_FULL_RATE: float = MAX_MANA / 15.0  # per second at full rate
+const MANA_REGEN_MIN_FACTOR: float = 0.3
+const MANA_REGEN_FAR_TILES: float = 5.0
+const MANA_REGEN_NEAR_TILES: float = 2.0
 
 
 func _ready() -> void:
@@ -51,38 +63,79 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if is_game_active:
 		level_time += delta
+		_update_mana_regen(delta)
 	if is_banish_mode:
 		_banish_timer -= delta
 		if _banish_timer <= 0.0:
 			_end_banish_mode()
-	if _score_multiplier_timer > 0.0:
-		_score_multiplier_timer -= delta
-		if _score_multiplier_timer <= 0.0:
-			_score_multiplier = 1
-	if _ghost_radar_timer > 0.0:
-		_ghost_radar_timer -= delta
-		if _ghost_radar_timer <= 0.0:
-			ghost_radar_ended.emit()
-	if is_game_active and mana < max_mana:
-		mana = minf(mana + max_mana / 15.0 * delta, max_mana)
-		_mana_regen_timer += delta
-		if _mana_regen_timer >= 0.1:
-			_mana_regen_timer = 0.0
-			mana_changed.emit(mana, max_mana)
+
+
+func _get_nearest_active_ghost_distance() -> float:
+	## Returns distance in tiles to nearest non-eaten, non-frightened ghost.
+	## Returns INF if no active ghosts exist.
+	var players := get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		return INF
+	var player_pos: Vector2 = players[0].global_position
+	var ghosts := get_tree().get_nodes_in_group("ghosts")
+	var min_dist: float = INF
+	for ghost in ghosts:
+		if ghost.current_state == ghost.State.EATEN or ghost.current_state == ghost.State.FRIGHTENED:
+			continue
+		var dist: float = player_pos.distance_to(ghost.global_position) / TILE_SIZE
+		if dist < min_dist:
+			min_dist = dist
+	return min_dist
+
+
+func _get_mana_regen_factor() -> float:
+	## Returns a factor between MANA_REGEN_MIN_FACTOR and 1.0 based on ghost proximity.
+	var dist_tiles: float = _get_nearest_active_ghost_distance()
+	if dist_tiles >= MANA_REGEN_FAR_TILES:
+		return 1.0
+	if dist_tiles <= MANA_REGEN_NEAR_TILES:
+		return MANA_REGEN_MIN_FACTOR
+	# Linear interpolation between near and far
+	var t: float = (dist_tiles - MANA_REGEN_NEAR_TILES) / (MANA_REGEN_FAR_TILES - MANA_REGEN_NEAR_TILES)
+	return MANA_REGEN_MIN_FACTOR + t * (1.0 - MANA_REGEN_MIN_FACTOR)
+
+
+func _update_mana_regen(delta: float) -> void:
+	if mana >= MAX_MANA:
+		_mana_regen_accumulator = 0.0
+		_mana_emit_accumulator = 0.0
+		return
+	var factor: float = _get_mana_regen_factor()
+	var regen: float = MANA_REGEN_FULL_RATE * factor * delta
+	_mana_regen_accumulator += regen
+	_mana_emit_accumulator += delta
+	# Apply whole mana points as they accumulate
+	if _mana_regen_accumulator >= 1.0:
+		var gained: int = int(_mana_regen_accumulator)
+		_mana_regen_accumulator -= float(gained)
+		mana = clampi(mana + gained, 0, MAX_MANA)
+	# Emit signal every 0.1s
+	if _mana_emit_accumulator >= 0.1:
+		_mana_emit_accumulator -= 0.1
+		mana_changed.emit(mana)
 
 
 func new_game() -> void:
 	score = 0
 	lives = MAX_LIVES
 	current_level = 1
+	current_maze = {}
 	is_game_active = true
 	level_time = 0.0
+	mana = 0
 	spell_tier = 0
+	_introduced_ghosts = []
 	_reset_level_state()
 	score_changed.emit(score)
 	lives_changed.emit(lives)
 	spell_meter_changed.emit(spell_meter)
-	mana_changed.emit(mana, max_mana)
+	mana_changed.emit(mana)
+	spell_tier_changed.emit(spell_tier)
 
 
 func _reset_level_state() -> void:
@@ -92,33 +145,44 @@ func _reset_level_state() -> void:
 	ghost_combo = 0
 	level_time = 0.0
 	_banish_timer = 0.0
-	_bonus_item_emitted = false
-	_score_multiplier = 1
-	_score_multiplier_timer = 0.0
-	_ghost_radar_timer = 0.0
+	_mana_regen_accumulator = 0.0
+	_mana_emit_accumulator = 0.0
+	uncollected_page_positions = []
 
 
 func start_level(level_num: int) -> void:
+	if level_num != current_level:
+		current_maze = {}
 	current_level = level_num
 	_reset_level_state()
-	max_mana = float(current_level) * 30.0
-	mana = max_mana
 	is_game_active = true
 	spell_meter_changed.emit(spell_meter)
-	mana_changed.emit(mana, max_mana)
 
 
-func collect_spell_page(page_name: String = "") -> void:
+func collect_spell_page(page_position: Vector2 = Vector2.ZERO, page_name: String = "") -> void:
 	spell_pages_collected += 1
 	add_score(PAGE_SCORE)
 	spell_meter = float(spell_pages_collected) / float(TOTAL_SPELL_PAGES)
 	spell_meter_changed.emit(spell_meter)
-	page_collected.emit(page_name)
-	if not _bonus_item_emitted and spell_pages_collected * 2 >= TOTAL_SPELL_PAGES:
-		_bonus_item_emitted = true
-		bonus_item_available.emit()
+	_prune_page_position(page_position)
+	if page_name != "":
+		page_collected.emit(page_name)
 	if spell_pages_collected >= TOTAL_SPELL_PAGES:
 		_start_banish_mode()
+
+
+func _prune_page_position(page_pos: Vector2) -> void:
+	if page_pos == Vector2.ZERO:
+		return
+	var closest_idx: int = -1
+	var closest_dist: float = 24.0 * 24.0  # within one tile squared
+	for i in range(uncollected_page_positions.size()):
+		var dist: float = uncollected_page_positions[i].distance_squared_to(page_pos)
+		if dist < closest_dist:
+			closest_dist = dist
+			closest_idx = i
+	if closest_idx >= 0:
+		uncollected_page_positions.remove_at(closest_idx)
 
 
 func _start_banish_mode() -> void:
@@ -147,7 +211,7 @@ func banish_ghost() -> int:
 
 
 func add_score(points: int) -> void:
-	score += points * _score_multiplier
+	score += points
 	score_changed.emit(score)
 
 
@@ -156,50 +220,10 @@ func lose_life() -> void:
 	lives_changed.emit(lives)
 	if lives <= 0:
 		is_game_active = false
-		AudioManager.play_game_over()
 		game_over.emit()
 
 
-func gain_life() -> void:
-	lives = mini(lives + 1, MAX_LIVES)
-	lives_changed.emit(lives)
-
-
-func activate_score_multiplier(multiplier: int, duration: float) -> void:
-	if duration <= 0.0:
-		return
-	_score_multiplier = multiplier
-	_score_multiplier_timer = duration
-
-
-func activate_ghost_radar(duration: float) -> void:
-	if duration <= 0.0:
-		return
-	_ghost_radar_timer = duration
-	ghost_radar_started.emit()
-
-
-func is_meter_full() -> bool:
-	return spell_pages_collected >= TOTAL_SPELL_PAGES
-
-
-func can_fire_spell() -> bool:
-	return mana >= 10.0
-
-
-func spend_mana(amount: float) -> void:
-	mana = maxf(mana - amount, 0.0)
-	mana_changed.emit(mana, max_mana)
-
-
-func upgrade_spell_tier() -> void:
-	spell_tier = mini(spell_tier + 1, 6)
-	spell_tier_changed.emit(spell_tier)
-
-
 func complete_level() -> void:
-	AudioManager.play_level_complete()
-	upgrade_spell_tier()
 	var time_bonus: int = int(max(0.0, 240.0 - level_time) * 10.0)
 	add_score(time_bonus)
 	if spell_pages_collected >= TOTAL_SPELL_PAGES:
@@ -208,5 +232,69 @@ func complete_level() -> void:
 	level_completed.emit(current_level)
 
 
+func save_continue_state() -> Dictionary:
+	return {
+		"level": current_level,
+		"score": score,
+		"spell_tier": spell_tier,
+	}
+
+
+func restore_continue_state(state: Dictionary) -> void:
+	var saved_score: int = state.get("score", 0)
+	score = int(saved_score * 0.5)
+	current_level = state.get("level", 1)
+	spell_tier = state.get("spell_tier", 0)
+	lives = MAX_LIVES
+	mana = 0
+	is_game_active = true
+	_introduced_ghosts = []
+	_reset_level_state()
+	score_changed.emit(score)
+	lives_changed.emit(lives)
+	spell_meter_changed.emit(spell_meter)
+	mana_changed.emit(mana)
+	spell_tier_changed.emit(spell_tier)
+
+
 func get_final_score() -> int:
 	return score
+
+
+func get_mana_cost() -> int:
+	var tier_idx: int = clampi(spell_tier, 0, MANA_COSTS.size() - 1)
+	return MANA_COSTS[tier_idx]
+
+
+func can_cast_spell() -> bool:
+	return mana >= get_mana_cost()
+
+
+func spend_mana_for_spell() -> bool:
+	var cost: int = get_mana_cost()
+	if mana < cost:
+		return false
+	mana -= cost
+	mana_changed.emit(mana)
+	return true
+
+
+func add_mana(amount: int) -> void:
+	mana = clampi(mana + amount, 0, MAX_MANA)
+	mana_changed.emit(mana)
+
+
+func set_spell_tier(tier: int) -> void:
+	spell_tier = clampi(tier, 0, MAX_SPELL_TIER)
+	spell_tier_changed.emit(spell_tier)
+
+
+func is_meter_full() -> bool:
+	return spell_pages_collected >= TOTAL_SPELL_PAGES
+
+
+func try_introduce_ghost(ghost_type_id: int) -> String:
+	if ghost_type_id in _introduced_ghosts:
+		return ""
+	_introduced_ghosts.append(ghost_type_id)
+	return GHOST_INTRO_TEXTS.get(ghost_type_id, "")

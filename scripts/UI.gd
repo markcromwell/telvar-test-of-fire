@@ -144,6 +144,12 @@ func _on_quit_pressed() -> void:
 	quit_pressed.emit()
 
 
+func _on_lore_button_pressed() -> void:
+	var lore_text := "Telvar's Test of Fire is the canonical prologue to the\nNew Paladin Order series by Kenneth & Charles Cromwell.\n\nDiscover what happens after Telvar's banishment to Antica."
+	show_lore_popup(lore_text)
+	pause_menu.visible = false
+
+
 func _on_settings_pressed() -> void:
 	_tween_show(settings_menu)
 	pause_menu.visible = false

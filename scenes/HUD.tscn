@@ -120,6 +120,10 @@ text = "Settings"
 layout_mode = 2
 text = "Restart"
 
+[node name="LoreButton" type="Button" parent="PauseMenu/PausePanel/VBoxContainer"]
+layout_mode = 2
+text = "About the Books"
+
 [node name="QuitButton" type="Button" parent="PauseMenu/PausePanel/VBoxContainer"]
 layout_mode = 2
 text = "Quit"
@@ -224,6 +228,7 @@ text = "Back"
 [connection signal="pressed" from="PauseMenu/PausePanel/VBoxContainer/ResumeButton" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="PauseMenu/PausePanel/VBoxContainer/SettingsButton" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="PauseMenu/PausePanel/VBoxContainer/RestartButton" to="." method="_on_restart_pressed"]
+[connection signal="pressed" from="PauseMenu/PausePanel/VBoxContainer/LoreButton" to="." method="_on_lore_button_pressed"]
 [connection signal="pressed" from="PauseMenu/PausePanel/VBoxContainer/QuitButton" to="." method="_on_quit_pressed"]
 [connection signal="pressed" from="LorePopup/LorePanel/VBoxContainer/ContinueButton" to="." method="_on_lore_continue"]
 [connection signal="pressed" from="SettingsMenu/VBoxContainer/BackButton" to="." method="_on_settings_back"]

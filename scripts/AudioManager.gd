@@ -1,240 +1,73 @@
 extends Node
 
+var music_volume: float = 0.7
 var sfx_volume: float = 1.0
+var music_enabled: bool = true
 var sfx_enabled: bool = true
 
-const POOL_SIZE: int = 8
-var _pool: Array[AudioStreamPlayer] = []
-var _pool_idx: int = 0
-
-var _music_player: AudioStreamPlayer = null
-var _music_enabled: bool = true
+var _music_player: AudioStreamPlayer
+var _sfx_player: AudioStreamPlayer
+var _howl_player: AudioStreamPlayer
 
 
 func _ready() -> void:
-	for i in POOL_SIZE:
-		var p := AudioStreamPlayer.new()
-		p.bus = "Master"
-		add_child(p)
-		_pool.append(p)
 	_music_player = AudioStreamPlayer.new()
 	_music_player.bus = "Master"
 	add_child(_music_player)
+	_sfx_player = AudioStreamPlayer.new()
+	_sfx_player.bus = "Master"
+	add_child(_sfx_player)
+	_howl_player = AudioStreamPlayer.new()
+	_howl_player.bus = "Master"
+	add_child(_howl_player)
+	_apply_volumes()
 
 
-func _next_player() -> AudioStreamPlayer:
-	var p := _pool[_pool_idx % POOL_SIZE]
-	_pool_idx += 1
-	return p
+func _apply_volumes() -> void:
+	if _music_player:
+		_music_player.volume_db = linear_to_db(music_volume) if music_enabled else -80.0
+	if _sfx_player:
+		_sfx_player.volume_db = linear_to_db(sfx_volume) if sfx_enabled else -80.0
+	if _howl_player:
+		_howl_player.volume_db = linear_to_db(sfx_volume) if sfx_enabled else -80.0
 
 
-func _load_wav_raw(path: String) -> AudioStreamWAV:
-	# Parse a PCM WAV file directly from disk — bypasses Godot's import/compress system
-	if not FileAccess.file_exists(path):
-		return null
-	var bytes := FileAccess.get_file_as_bytes(path)
-	if bytes.size() < 44:
-		return null
-	# Walk chunks to find fmt and data
-	var channels: int = 1
-	var sample_rate: int = 22050
-	var bits_per_sample: int = 16
-	var pcm_data := PackedByteArray()
-	var pos: int = 12  # skip "RIFF....WAVE"
-	while pos + 8 <= bytes.size():
-		var tag: String = bytes.slice(pos, pos + 4).get_string_from_ascii()
-		var chunk_sz: int = bytes.decode_u32(pos + 4)
-		pos += 8
-		if tag == "fmt ":
-			var fmt: int = bytes.decode_u16(pos)  # 1 = PCM
-			if fmt != 1:
-				return null  # not PCM
-			channels = bytes.decode_u16(pos + 2)
-			sample_rate = bytes.decode_u32(pos + 4)
-			bits_per_sample = bytes.decode_u16(pos + 14)
-		elif tag == "data":
-			pcm_data = bytes.slice(pos, pos + chunk_sz)
-			break
-		pos += chunk_sz
-	if pcm_data.size() == 0:
-		return null
-	var wav := AudioStreamWAV.new()
-	wav.format = AudioStreamWAV.FORMAT_16_BITS if bits_per_sample == 16 else AudioStreamWAV.FORMAT_8_BITS
-	wav.mix_rate = sample_rate
-	wav.stereo = channels == 2
-	wav.data = pcm_data
-	return wav
+func set_music_volume(vol: float) -> void:
+	music_volume = clampf(vol, 0.0, 1.0)
+	_apply_volumes()
 
-
-func _play_file(path: String, vol_db: float = -8.0) -> void:
-	if not sfx_enabled:
-		return
-	var stream: AudioStream = null
-	if path.ends_with(".wav"):
-		stream = _load_wav_raw(path)
-	else:
-		stream = load(path) as AudioStream
-	if not stream:
-		push_warning("AudioManager: failed to load " + path)
-		return
-	var p := _next_player()
-	p.stream = stream
-	p.volume_db = vol_db + linear_to_db(sfx_volume)
-	p.play()
-
-
-# ── SFX wired to asset files ──────────────────────────────────────────────────
-
-func play_page_collect() -> void:
-	_play_file("res://assets/audio/sfx/page_collect.wav", -8.0)
-
-func play_spell_fire() -> void:
-	_play_file("res://assets/audio/sfx/spell_cast_fire.wav", -5.0)
-
-func play_ghost_frightened() -> void:
-	_play_file("res://assets/audio/sfx/ghost_frightened_start.wav", -7.0)
-
-func play_ghost_eaten() -> void:
-	_play_file("res://assets/audio/sfx/ghost_eaten.wav", -5.0)
-
-func play_ghost_respawn() -> void:
-	_play_file("res://assets/audio/sfx/ghost_respawn.wav", -9.0)
-
-func play_player_death() -> void:
-	_play_file("res://assets/audio/sfx/death_explosion.wav", -3.0)
-
-func play_sphere_pickup() -> void:
-	_play_file("res://assets/audio/sfx/bonus_item_collect.wav", -5.0)
-
-func play_level_complete() -> void:
-	_play_file("res://assets/audio/sfx/level_complete.wav", -4.0)
-
-func play_game_over() -> void:
-	_play_file("res://assets/audio/sfx/game_over.wav", -4.0)
-
-func play_sfx(_pitch_scale: float = 1.0) -> void:
-	_play_file("res://assets/audio/sfx/ui_click.wav", -11.0)
-
-func play_banish_mode() -> void:
-	play_ghost_frightened()
-
-func play_death_taunt() -> void:
-	play_player_death()
-
-func play_game_start() -> void:
-	pass
-
-func play_level_start(_level: int) -> void:
-	pass
 
 func set_sfx_volume(vol: float) -> void:
 	sfx_volume = clampf(vol, 0.0, 1.0)
-
-func set_music_volume(_vol: float) -> void:
-	pass
+	_apply_volumes()
 
 
-# ── Procedural SFX (ghost hit / spell bounce — no matching asset) ─────────────
-
-func _beep(freq: float, duration: float, attack: float = 0.01, volume: float = 0.5) -> AudioStreamWAV:
-	var rate: int = 22050
-	var n: int = int(rate * duration)
-	var data := PackedByteArray()
-	data.resize(n * 2)
-	for i in n:
-		var t: float = float(i) / rate
-		var env: float = (t / attack) if t < attack else (1.0 - (t - attack) / maxf(duration - attack, 0.001))
-		env = clampf(env, 0.0, 1.0)
-		var s: int = clampi(int(sin(TAU * freq * t) * env * volume * 32767.0), -32768, 32767)
-		data[i * 2]     = s & 0xFF
-		data[i * 2 + 1] = (s >> 8) & 0xFF
-	var wav := AudioStreamWAV.new()
-	wav.format = AudioStreamWAV.FORMAT_16_BITS
-	wav.mix_rate = rate
-	wav.stereo = false
-	wav.data = data
-	return wav
-
-
-func _sweep(f0: float, f1: float, duration: float, volume: float = 0.5) -> AudioStreamWAV:
-	var rate: int = 22050
-	var n: int = int(rate * duration)
-	var data := PackedByteArray()
-	data.resize(n * 2)
-	var phase: float = 0.0
-	for i in n:
-		var t: float = float(i) / rate
-		var freq: float = lerpf(f0, f1, t / duration)
-		var env: float = 1.0 - (t / duration) * 0.7
-		phase += TAU * freq / rate
-		var s: int = clampi(int(sin(phase) * env * volume * 32767.0), -32768, 32767)
-		data[i * 2]     = s & 0xFF
-		data[i * 2 + 1] = (s >> 8) & 0xFF
-	var wav := AudioStreamWAV.new()
-	wav.format = AudioStreamWAV.FORMAT_16_BITS
-	wav.mix_rate = rate
-	wav.stereo = false
-	wav.data = data
-	return wav
-
-
-func _play(wav: AudioStreamWAV, vol_db: float = -8.0) -> void:
+func play_sfx(pitch_scale: float = 1.0) -> void:
 	if not sfx_enabled:
 		return
-	var p := _next_player()
-	p.stream = wav
-	p.volume_db = vol_db + linear_to_db(sfx_volume)
-	p.play()
+	_sfx_player.pitch_scale = pitch_scale
+	_sfx_player.volume_db = linear_to_db(sfx_volume)
 
-
-func play_ghost_hit() -> void:
-	_play(_sweep(520.0, 180.0, 0.12, 0.55), -10.0)
-
-
-func play_spell_ineffective() -> void:
-	var p1 := _next_player()
-	p1.stream = _beep(980.0, 0.22, 0.003, 0.7)
-	p1.volume_db = -5.0
-	p1.play()
-	var p2 := _next_player()
-	p2.stream = _beep(1470.0, 0.16, 0.003, 0.5)
-	p2.volume_db = -8.0
-	p2.play()
-	var p3 := _next_player()
-	p3.stream = _beep(340.0, 0.14, 0.004, 0.6)
-	p3.volume_db = -7.0
-	p3.play()
-
-
-func play_gem_explode() -> void:
-	_play_file("res://assets/audio/sfx/death_explosion.wav", -2.0)
-
-
-# ── Music ─────────────────────────────────────────────────────────────────────
 
 func play_music() -> void:
-	if not _music_player or _music_player.playing:
+	if not music_enabled:
 		return
-	_music_enabled = true
-	var ogg_path := "res://assets/audio/music/main_theme.ogg"
-	var stream: AudioStream = load(ogg_path) as AudioStream
-	if not stream:
-		# Import not ready — load raw bytes directly (bypasses import system)
-		if FileAccess.file_exists(ogg_path):
-			var bytes := FileAccess.get_file_as_bytes(ogg_path)
-			if bytes.size() > 0:
-				stream = AudioStreamOggVorbis.load_from_buffer(bytes)
-	if not stream:
-		push_warning("AudioManager: could not load main_theme.ogg")
-		return
-	if stream is AudioStreamOggVorbis:
-		(stream as AudioStreamOggVorbis).loop = true
-	_music_player.stream = stream
-	_music_player.volume_db = -10.0
-	_music_player.play()
+	_music_player.volume_db = linear_to_db(music_volume)
 
 
 func stop_music() -> void:
-	_music_enabled = false
-	if _music_player:
-		_music_player.stop()
+	_music_player.stop()
+
+
+func play_howl() -> void:
+	if not sfx_enabled:
+		return
+	_howl_player.pitch_scale = 0.7
+	_howl_player.volume_db = linear_to_db(sfx_volume)
+	# Howl will play when an AudioStream is assigned to _howl_player.stream
+	# For now, trigger a low-pitched sfx as placeholder
+	if _howl_player.stream:
+		_howl_player.play()
+	elif _sfx_player.stream:
+		_howl_player.stream = _sfx_player.stream
+		_howl_player.play()

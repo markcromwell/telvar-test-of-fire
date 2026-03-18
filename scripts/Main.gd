@@ -12,9 +12,11 @@ const LEVEL_SCENES: Array[String] = [
 
 var _current_level_node: Node = null
 var _high_score_manager: Node = null
+var _continue_state: Dictionary = {}
 
 @onready var title_screen: Control = $TitleScreen
 @onready var ending_screen: Control = $EndingScreen
+@onready var continue_screen: Control = $ContinueScreen
 @onready var level_container: Node = $LevelContainer
 
 
@@ -29,6 +31,7 @@ func _ready() -> void:
 func _show_title() -> void:
 	_clear_level()
 	ending_screen.visible = false
+	continue_screen.visible = false
 	title_screen.visible = true
 	var hs_label := title_screen.get_node_or_null("HighScoreLabel") as Label
 	if hs_label:
@@ -49,6 +52,7 @@ func _load_level(level_num: int) -> void:
 	_clear_level()
 	title_screen.visible = false
 	ending_screen.visible = false
+	continue_screen.visible = false
 	if level_num < 1 or level_num > LEVEL_SCENES.size():
 		_show_ending()
 		return
@@ -76,8 +80,47 @@ func _on_level_completed(level_num: int) -> void:
 func _on_game_over() -> void:
 	AudioManager.stop_music()
 	_high_score_manager.check_and_save(GameManager.get_final_score())
-	var timer := get_tree().create_timer(2.0)
-	timer.timeout.connect(_show_title)
+	if GameManager.current_level >= 2:
+		_continue_state = GameManager.save_continue_state()
+		var timer := get_tree().create_timer(2.0)
+		timer.timeout.connect(_show_continue_screen)
+	else:
+		var timer := get_tree().create_timer(2.0)
+		timer.timeout.connect(_show_title)
+
+
+func _show_continue_screen() -> void:
+	_clear_level()
+	title_screen.visible = false
+	ending_screen.visible = false
+	continue_screen.visible = true
+	var level_label := continue_screen.get_node_or_null("LevelLabel") as Label
+	if level_label:
+		level_label.text = "CONTINUE FROM LEVEL %d?" % _continue_state.get("level", 1)
+	var penalty_label := continue_screen.get_node_or_null("PenaltyLabel") as Label
+	if penalty_label:
+		var original_score: int = _continue_state.get("score", 0)
+		var new_score: int = int(original_score * 0.5)
+		penalty_label.text = "Score: %d → %d (50%% penalty)" % [original_score, new_score]
+	_tween_alpha(continue_screen, 0.0, 1.0, 0.2)
+
+
+func _on_continue_yes() -> void:
+	var level_num: int = _continue_state.get("level", 1)
+	GameManager.restore_continue_state(_continue_state)
+	_continue_state = {}
+	_tween_alpha(continue_screen, 1.0, 0.0, 0.2)
+	var tween := create_tween()
+	tween.tween_interval(0.2)
+	tween.tween_callback(_load_level.bind(level_num))
+
+
+func _on_continue_no() -> void:
+	_continue_state = {}
+	_tween_alpha(continue_screen, 1.0, 0.0, 0.2)
+	var tween := create_tween()
+	tween.tween_interval(0.2)
+	tween.tween_callback(_show_title)
 
 
 func _show_ending() -> void:
@@ -93,6 +136,14 @@ func _show_ending() -> void:
 	if lore_label:
 		lore_label.text = "Telvar is banished to Antica with Myramar.\nThe ancient seals hold... for now."
 	_tween_alpha(ending_screen, 0.0, 1.0, 0.2)
+
+
+func _on_book1_pressed() -> void:
+	MarketingLinks.open(MarketingLinks.BOOK1_URL)
+
+
+func _on_book3_pressed() -> void:
+	MarketingLinks.open(MarketingLinks.BOOK3_URL)
 
 
 func _on_ending_continue() -> void:
