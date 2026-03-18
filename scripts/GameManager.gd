@@ -3,6 +3,8 @@ extends Node
 signal score_changed(new_score: int)
 signal lives_changed(new_lives: int)
 signal spell_meter_changed(value: float)
+signal mana_changed(new_mana: int)
+signal spell_tier_changed(new_tier: int)
 signal level_completed(level_num: int)
 signal game_over
 signal banish_mode_started
@@ -14,11 +16,16 @@ const BANISH_DURATION: float = 8.0
 const GHOST_SCORES: Array[int] = [50, 100, 200, 400]
 const PAGE_SCORE: int = 10
 const LEVEL_COUNT: int = 6
+const MAX_MANA: int = 100
+const MANA_COSTS: Array[int] = [8, 8, 10, 10, 14, 14, 20]
+const MAX_SPELL_TIER: int = 6
 
 var score: int = 0
 var lives: int = MAX_LIVES
 var spell_pages_collected: int = 0
 var spell_meter: float = 0.0
+var mana: int = 0
+var spell_tier: int = 0
 var current_level: int = 1
 var is_banish_mode: bool = false
 var ghost_combo: int = 0
@@ -50,10 +57,14 @@ func new_game() -> void:
 	current_maze = {}
 	is_game_active = true
 	level_time = 0.0
+	mana = 0
+	spell_tier = 0
 	_reset_level_state()
 	score_changed.emit(score)
 	lives_changed.emit(lives)
 	spell_meter_changed.emit(spell_meter)
+	mana_changed.emit(mana)
+	spell_tier_changed.emit(spell_tier)
 
 
 func _reset_level_state() -> void:
@@ -132,3 +143,35 @@ func complete_level() -> void:
 
 func get_final_score() -> int:
 	return score
+
+
+func get_mana_cost() -> int:
+	var tier_idx: int = clampi(spell_tier, 0, MANA_COSTS.size() - 1)
+	return MANA_COSTS[tier_idx]
+
+
+func can_cast_spell() -> bool:
+	return mana >= get_mana_cost()
+
+
+func spend_mana_for_spell() -> bool:
+	var cost: int = get_mana_cost()
+	if mana < cost:
+		return false
+	mana -= cost
+	mana_changed.emit(mana)
+	return true
+
+
+func add_mana(amount: int) -> void:
+	mana = clampi(mana + amount, 0, MAX_MANA)
+	mana_changed.emit(mana)
+
+
+func set_spell_tier(tier: int) -> void:
+	spell_tier = clampi(tier, 0, MAX_SPELL_TIER)
+	spell_tier_changed.emit(spell_tier)
+
+
+func is_meter_full() -> bool:
+	return spell_pages_collected >= TOTAL_SPELL_PAGES

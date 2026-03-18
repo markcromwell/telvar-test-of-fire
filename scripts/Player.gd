@@ -4,12 +4,14 @@ signal died
 
 const TILE_SIZE: int = 24
 const SPEED: float = 120.0
+const SPELL_COOLDOWN: float = 0.3
 
 var current_direction: Vector2 = Vector2.ZERO
 var queued_direction: Vector2 = Vector2.ZERO
 var target_position: Vector2 = Vector2.ZERO
 var is_moving: bool = false
 var is_alive: bool = true
+var _spell_cooldown_timer: float = 0.0
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var sprite: Sprite2D = $Sprite2D
@@ -25,6 +27,8 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
+	if _spell_cooldown_timer > 0.0:
+		_spell_cooldown_timer -= delta
 	_read_input()
 	if is_moving:
 		_move_toward_target(delta)
@@ -44,6 +48,8 @@ func _read_input() -> void:
 		input_dir = Vector2.RIGHT
 	if input_dir != Vector2.ZERO:
 		queued_direction = input_dir
+	if Input.is_action_just_pressed("cast_spell"):
+		_try_cast_spell()
 
 
 func _try_move() -> void:
@@ -97,6 +103,25 @@ func _spawn_death_particles() -> void:
 	add_child(particles)
 	var timer := get_tree().create_timer(0.6)
 	timer.timeout.connect(particles.queue_free)
+
+
+func _try_cast_spell() -> void:
+	if _spell_cooldown_timer > 0.0:
+		return
+	if not GameManager.can_cast_spell():
+		return
+	var fire_dir: Vector2 = current_direction if current_direction != Vector2.ZERO else Vector2.RIGHT
+	if not GameManager.spend_mana_for_spell():
+		return
+	cast_spell(fire_dir, GameManager.spell_tier)
+	_spell_cooldown_timer = SPELL_COOLDOWN
+
+
+func cast_spell(dir: Vector2, spell_tier: int) -> void:
+	var SpellProjectile: Script = load("res://scripts/SpellProjectile.gd")
+	var projectiles: Array[Area2D] = SpellProjectile.create_projectile(spell_tier, global_position, dir)
+	for proj in projectiles:
+		get_parent().add_child(proj)
 
 
 func respawn(spawn_pos: Vector2) -> void:
