@@ -25,6 +25,18 @@ func _ready() -> void:
 		hud.quit_pressed.connect(_quit_to_title)
 
 
+func _resolve_maze() -> Dictionary:
+	if not GameManager.current_maze.is_empty():
+		return GameManager.current_maze
+	var maze := _generate_maze()
+	GameManager.current_maze = maze
+	return maze
+
+
+func _generate_maze() -> Dictionary:
+	return {}
+
+
 func _setup_level() -> void:
 	_player = get_node_or_null("Player") as CharacterBody2D
 	if _player:

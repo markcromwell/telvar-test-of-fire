@@ -25,6 +25,8 @@ var ghost_combo: int = 0
 var level_time: float = 0.0
 var is_game_active: bool = false
 
+var current_maze: Dictionary = {}
+
 var _banish_timer: float = 0.0
 
 
@@ -45,6 +47,7 @@ func new_game() -> void:
 	score = 0
 	lives = MAX_LIVES
 	current_level = 1
+	current_maze = {}
 	is_game_active = true
 	level_time = 0.0
 	_reset_level_state()
@@ -63,6 +66,8 @@ func _reset_level_state() -> void:
 
 
 func start_level(level_num: int) -> void:
+	if level_num != current_level:
+		current_maze = {}
 	current_level = level_num
 	_reset_level_state()
 	is_game_active = true
