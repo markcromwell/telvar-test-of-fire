@@ -57,6 +57,10 @@ pause={
 ]
 }
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+
 [layer_names]
 
 2d_physics/layer_1="walls"
