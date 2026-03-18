@@ -35,6 +35,14 @@ var is_game_active: bool = false
 var current_maze: Dictionary = {}
 
 var _banish_timer: float = 0.0
+var _mana_regen_accumulator: float = 0.0
+var _mana_emit_accumulator: float = 0.0
+
+const TILE_SIZE: int = 24
+const MANA_REGEN_FULL_RATE: float = MAX_MANA / 15.0  # per second at full rate
+const MANA_REGEN_MIN_FACTOR: float = 0.3
+const MANA_REGEN_FAR_TILES: float = 5.0
+const MANA_REGEN_NEAR_TILES: float = 2.0
 
 
 func _ready() -> void:
@@ -44,10 +52,61 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if is_game_active:
 		level_time += delta
+		_update_mana_regen(delta)
 	if is_banish_mode:
 		_banish_timer -= delta
 		if _banish_timer <= 0.0:
 			_end_banish_mode()
+
+
+func _get_nearest_active_ghost_distance() -> float:
+	## Returns distance in tiles to nearest non-eaten, non-frightened ghost.
+	## Returns INF if no active ghosts exist.
+	var players := get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		return INF
+	var player_pos: Vector2 = players[0].global_position
+	var ghosts := get_tree().get_nodes_in_group("ghosts")
+	var min_dist: float = INF
+	for ghost in ghosts:
+		if ghost.current_state == ghost.State.EATEN or ghost.current_state == ghost.State.FRIGHTENED:
+			continue
+		var dist: float = player_pos.distance_to(ghost.global_position) / TILE_SIZE
+		if dist < min_dist:
+			min_dist = dist
+	return min_dist
+
+
+func _get_mana_regen_factor() -> float:
+	## Returns a factor between MANA_REGEN_MIN_FACTOR and 1.0 based on ghost proximity.
+	var dist_tiles: float = _get_nearest_active_ghost_distance()
+	if dist_tiles >= MANA_REGEN_FAR_TILES:
+		return 1.0
+	if dist_tiles <= MANA_REGEN_NEAR_TILES:
+		return MANA_REGEN_MIN_FACTOR
+	# Linear interpolation between near and far
+	var t: float = (dist_tiles - MANA_REGEN_NEAR_TILES) / (MANA_REGEN_FAR_TILES - MANA_REGEN_NEAR_TILES)
+	return MANA_REGEN_MIN_FACTOR + t * (1.0 - MANA_REGEN_MIN_FACTOR)
+
+
+func _update_mana_regen(delta: float) -> void:
+	if mana >= MAX_MANA:
+		_mana_regen_accumulator = 0.0
+		_mana_emit_accumulator = 0.0
+		return
+	var factor: float = _get_mana_regen_factor()
+	var regen: float = MANA_REGEN_FULL_RATE * factor * delta
+	_mana_regen_accumulator += regen
+	_mana_emit_accumulator += delta
+	# Apply whole mana points as they accumulate
+	if _mana_regen_accumulator >= 1.0:
+		var gained: int = int(_mana_regen_accumulator)
+		_mana_regen_accumulator -= float(gained)
+		mana = clampi(mana + gained, 0, MAX_MANA)
+	# Emit signal every 0.1s
+	if _mana_emit_accumulator >= 0.1:
+		_mana_emit_accumulator -= 0.1
+		mana_changed.emit(mana)
 
 
 func new_game() -> void:
@@ -74,6 +133,8 @@ func _reset_level_state() -> void:
 	ghost_combo = 0
 	level_time = 0.0
 	_banish_timer = 0.0
+	_mana_regen_accumulator = 0.0
+	_mana_emit_accumulator = 0.0
 
 
 func start_level(level_num: int) -> void:
