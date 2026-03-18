@@ -28,7 +28,7 @@ func _ready() -> void:
 	_update_lives(GameManager.lives)
 	_create_mana_bar()
 	GameManager.mana_changed.connect(_on_mana_changed)
-	_on_mana_changed(GameManager.mana, GameManager.max_mana)
+	_on_mana_changed(GameManager.mana, float(GameManager.MAX_MANA))
 
 
 func _create_mana_bar() -> void:

@@ -8,8 +8,8 @@ const FAST_SPEED := 100.0
 
 
 func _ready() -> void:
-	_speed = SLOW_SPEED
 	super._ready()
+	_speed = SLOW_SPEED  # override _configure_type's BASE_SPEED*0.8 with our constant
 	GameManager.spell_meter_changed.connect(_on_meter_changed)
 
 
