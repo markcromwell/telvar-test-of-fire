@@ -61,29 +61,31 @@ func _ready() -> void:
 
 
 func _configure_type() -> void:
+	if sprite:
+		sprite.modulate = Color(1.0, 1.0, 1.0)
 	match ghost_type:
 		GhostType.AEMON:
 			_speed = BASE_SPEED * 1.1
 			if sprite:
-				sprite.modulate = Color(1.0, 0.0, 0.0)
+				sprite.texture = load("res://assets/sprites/ghosts/aemon_guardian.png")
 		GhostType.ABYSSAL:
 			_speed = BASE_SPEED
 			if sprite:
-				sprite.modulate = Color(1.0, 0.5, 0.8)
+				sprite.texture = load("res://assets/sprites/ghosts/abyssal_creature.png")
 		GhostType.UNDEAD:
 			_speed = BASE_SPEED * 0.8
 			if sprite:
-				sprite.modulate = Color(0.3, 0.8, 1.0)
+				sprite.texture = load("res://assets/sprites/ghosts/undead.png")
 		GhostType.ELEMENTAL:
 			_speed = BASE_SPEED * 0.9
 			_is_invulnerable = true
 			if sprite:
-				sprite.modulate = Color(1.0, 0.6, 0.0)
+				sprite.texture = load("res://assets/sprites/ghosts/elemental_guardian.png")
 			_setup_elemental_aura()
 		GhostType.HOUND:
 			_speed = BASE_SPEED * 1.2
 			if sprite:
-				sprite.modulate = Color(0.4, 0.0, 0.0)
+				sprite.texture = load("res://assets/sprites/ghosts/hound_fenrir.png")
 
 
 func _setup_elemental_aura() -> void:
@@ -301,8 +303,7 @@ func _move_ghost(delta: float) -> void:
 		if current_state == State.EATEN and position.distance_to(home_position) < TILE_SIZE:
 			current_state = State.SCATTER
 			_state_timer = SCATTER_TIME
-			if sprite:
-				sprite.modulate.a = 1.0
+			_configure_type()
 	else:
 		position += move_vec
 
@@ -330,7 +331,8 @@ func get_banished() -> void:
 	if current_state == State.FRIGHTENED:
 		current_state = State.EATEN
 		if sprite:
-			sprite.modulate.a = 0.3
+			sprite.texture = load("res://assets/sprites/ghosts/ghost_eaten.png")
+			sprite.modulate = Color(1.0, 1.0, 1.0, 0.7)
 		_spawn_eaten_particles()
 		eaten.emit()
 
@@ -372,7 +374,8 @@ func enter_frightened() -> void:
 	if current_state != State.EATEN:
 		current_state = State.FRIGHTENED
 		if sprite:
-			sprite.modulate = Color(0.2, 0.2, 1.0)
+			sprite.texture = load("res://assets/sprites/ghosts/ghost_frightened.png")
+			sprite.modulate = Color(1.0, 1.0, 1.0)
 
 
 func exit_frightened() -> void:

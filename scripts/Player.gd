@@ -2,7 +2,7 @@ extends CharacterBody2D
 
 signal died
 
-const TILE_SIZE: int = 24
+const TILE_SIZE: int = 48
 const SPEED: float = 120.0
 const SPELL_COOLDOWN: float = 0.3
 
@@ -22,6 +22,8 @@ func _ready() -> void:
 	target_position = position
 	collision_layer = 2
 	collision_mask = 1
+	if sprite:
+		sprite.texture = load("res://assets/sprites/player/telvar_idle.png")
 
 
 func _physics_process(delta: float) -> void:
