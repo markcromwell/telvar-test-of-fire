@@ -94,13 +94,13 @@ func _build_maze_geometry() -> void:
 			if row_str[col] == "#":
 				continue
 			if floor_tex:
-				var tr := TextureRect.new()
-				tr.texture = floor_tex
-				tr.stretch_mode = TextureRect.STRETCH_SCALE
-				tr.size = Vector2(TILE_SIZE, TILE_SIZE)
-				tr.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
-				tr.z_index = -10
-				add_child(tr)
+				var tile := TextureRect.new()
+				tile.texture = floor_tex
+				tile.stretch_mode = TextureRect.STRETCH_SCALE
+				tile.size = Vector2(TILE_SIZE, TILE_SIZE)
+				tile.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
+				tile.z_index = -10
+				add_child(tile)
 			else:
 				var bg := ColorRect.new()
 				bg.color = Color(0.06, 0.05, 0.04)
@@ -128,13 +128,13 @@ func _build_maze_geometry() -> void:
 			wall_body.add_child(shape_node)
 			# Wall visual tile
 			if wall_tex:
-				var tr := TextureRect.new()
-				tr.texture = wall_tex
-				tr.stretch_mode = TextureRect.STRETCH_SCALE
-				tr.size = Vector2(TILE_SIZE, TILE_SIZE)
-				tr.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
-				tr.z_index = -5
-				add_child(tr)
+				var tile := TextureRect.new()
+				tile.texture = wall_tex
+				tile.stretch_mode = TextureRect.STRETCH_SCALE
+				tile.size = Vector2(TILE_SIZE, TILE_SIZE)
+				tile.position = Vector2(col * TILE_SIZE, row * TILE_SIZE)
+				tile.z_index = -5
+				add_child(tile)
 			else:
 				var vis := ColorRect.new()
 				vis.color = Color(0.18, 0.15, 0.12)
