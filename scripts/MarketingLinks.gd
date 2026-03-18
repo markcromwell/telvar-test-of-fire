@@ -9,6 +9,7 @@ const SERIES_URL := "https://www.medias-novels.com"
 
 func open(url: String) -> void:
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.open('%s', '_blank')" % url)
+		var safe_url := url.replace("\\", "\\\\").replace("'", "\\'")
+		JavaScriptBridge.eval("window.open('%s', '_blank')" % safe_url)
 	else:
 		OS.shell_open(url)
