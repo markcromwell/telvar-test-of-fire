@@ -85,14 +85,17 @@ func _setup_level() -> void:
 			var ghost := child as CharacterBody2D
 			if ghost:
 				_ghosts.append(ghost)
-				ghost.eaten.connect(_on_ghost_eaten)
+				ghost.eaten.connect(_on_ghost_eaten.bind(ghost))
 	var page_container := get_node_or_null("SpellPages")
 	if page_container:
 		_pages_remaining = page_container.get_child_count()
+		for page in page_container.get_children():
+			page.tree_exiting.connect(_on_page_collected.bind(page))
 
 
 func _on_player_died() -> void:
 	GameManager.lose_life()
+	_flash_ghost_positions()
 	if GameManager.lives > 0:
 		var timer := get_tree().create_timer(1.0)
 		timer.timeout.connect(_respawn_player)
@@ -103,8 +106,10 @@ func _respawn_player() -> void:
 		_player.respawn(_player_spawn)
 
 
-func _on_ghost_eaten() -> void:
-	GameManager.banish_ghost()
+func _on_ghost_eaten(ghost: CharacterBody2D) -> void:
+	var pts: int = GameManager.banish_ghost()
+	if ghost and is_instance_valid(ghost):
+		_spawn_floating_score(ghost.position, pts)
 
 
 func _on_banish_started() -> void:
@@ -126,6 +131,40 @@ func _restart_level() -> void:
 
 func _quit_to_title() -> void:
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+
+
+func _on_page_collected(page: Node) -> void:
+	if page and is_instance_valid(page):
+		_spawn_floating_score(page.position, GameManager.PAGE_SCORE)
+
+
+func _flash_ghost_positions() -> void:
+	for ghost in _ghosts:
+		if not ghost or not is_instance_valid(ghost):
+			continue
+		var flash := ColorRect.new()
+		flash.color = Color(1.0, 0.0, 0.0, 0.65)
+		flash.size = Vector2(TILE_SIZE, TILE_SIZE)
+		flash.position = ghost.position - Vector2(TILE_SIZE * 0.5, TILE_SIZE * 0.5)
+		flash.z_index = 50
+		add_child(flash)
+		var tween := create_tween()
+		tween.tween_property(flash, "color:a", 0.0, 1.2)
+		tween.tween_callback(flash.queue_free)
+
+
+func _spawn_floating_score(pos: Vector2, points: int) -> void:
+	var label := Label.new()
+	label.text = "+" + str(points)
+	label.position = pos - Vector2(20, 10)
+	label.z_index = 50
+	add_child(label)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 55, 0.75)
+	tween.tween_property(label, "modulate:a", 0.0, 0.75)
+	tween.set_parallel(false)
+	tween.tween_callback(label.queue_free)
 
 
 func complete() -> void:
