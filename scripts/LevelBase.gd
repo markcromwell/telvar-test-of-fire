@@ -11,8 +11,44 @@ var _player: CharacterBody2D
 var _ghosts: Array[CharacterBody2D] = []
 var _pages_remaining: int = 0
 var _player_spawn: Vector2 = Vector2(336, 564)
+var _contact_cooldown: float = 0.0
+const CONTACT_COOLDOWN_TIME: float = 0.15
+const KILL_RADIUS: float = TILE_SIZE * 0.6
 
 @onready var hud: CanvasLayer = $HUD
+
+
+func _physics_process(delta: float) -> void:
+	if _contact_cooldown > 0.0:
+		_contact_cooldown -= delta
+	_check_ghost_kills()
+
+
+func _check_ghost_kills() -> void:
+	if not _player or not _player.is_alive:
+		return
+	if _contact_cooldown > 0.0:
+		return
+	var player_tile := Vector2i(
+		roundi(_player.position.x / TILE_SIZE),
+		roundi(_player.position.y / TILE_SIZE)
+	)
+	for ghost in _ghosts:
+		if not ghost or not is_instance_valid(ghost):
+			continue
+		if ghost.current_state == ghost.State.FRIGHTENED or ghost.current_state == ghost.State.EATEN:
+			continue
+		var ghost_tile := Vector2i(
+			roundi(ghost.position.x / TILE_SIZE),
+			roundi(ghost.position.y / TILE_SIZE)
+		)
+		if ghost_tile != player_tile:
+			continue
+		var dist: float = _player.position.distance_to(ghost.position)
+		if dist < KILL_RADIUS:
+			_contact_cooldown = CONTACT_COOLDOWN_TIME
+			_player.hit_by_ghost()
+			return
 
 
 func _ready() -> void:
