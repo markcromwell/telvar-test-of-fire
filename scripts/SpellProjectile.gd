@@ -71,21 +71,40 @@ func _setup_collision() -> void:
 func _setup_visuals() -> void:
 	var color_idx: int = clampi(tier, 0, TIER_COLORS.size() - 1)
 	var color: Color = TIER_COLORS[color_idx]
+
+	# Outer glow ring
+	var glow := ColorRect.new()
+	var glow_size: float = 22.0
+	glow.size = Vector2(glow_size, glow_size)
+	glow.position = Vector2(-glow_size * 0.5, -glow_size * 0.5)
+	glow.color = Color(color.r, color.g, color.b, 0.35)
+	add_child(glow)
+
+	# Inner bright orb
+	var orb := ColorRect.new()
+	var orb_size: float = 12.0
+	orb.size = Vector2(orb_size, orb_size)
+	orb.position = Vector2(-orb_size * 0.5, -orb_size * 0.5)
+	orb.color = color
+	add_child(orb)
+
+	# Tail particles
 	var particles := CPUParticles2D.new()
 	particles.emitting = true
 	particles.one_shot = false
-	particles.amount = 6
-	particles.lifetime = 0.3
+	particles.amount = 10
+	particles.lifetime = 0.25
 	particles.explosiveness = 0.0
 	particles.direction = -direction
-	particles.spread = 20.0
-	particles.initial_velocity_min = 10.0
-	particles.initial_velocity_max = 30.0
+	particles.spread = 25.0
+	particles.initial_velocity_min = 20.0
+	particles.initial_velocity_max = 55.0
 	particles.gravity = Vector2.ZERO
-	particles.color = color
+	particles.color = Color(color.r, color.g, color.b, 0.8)
+	particles.scale_amount_min = 2.0
+	particles.scale_amount_max = 4.0
 	particles.position = Vector2.ZERO
 	add_child(particles)
-	modulate = color
 
 
 func _physics_process(delta: float) -> void:

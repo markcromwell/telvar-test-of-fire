@@ -8,6 +8,7 @@ var _is_paused: bool = false
 var _mana_fill: ColorRect = null
 var _mana_bg: ColorRect = null
 var _mana_label: Label = null
+var _pause_dim: ColorRect = null
 
 @onready var score_label: Label = $TopBar/ScoreLabel
 @onready var lives_container: HBoxContainer = $TopBar/LivesContainer
@@ -19,6 +20,8 @@ var _mana_label: Label = null
 
 
 func _ready() -> void:
+	# Must process even when game tree is paused so ESC can toggle pause off
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	GameManager.score_changed.connect(_on_score_changed)
 	GameManager.lives_changed.connect(_on_lives_changed)
 	pause_menu.visible = false
@@ -27,8 +30,19 @@ func _ready() -> void:
 	_update_score(GameManager.score)
 	_update_lives(GameManager.lives)
 	_create_mana_bar()
+	_create_pause_dim()
 	GameManager.mana_changed.connect(_on_mana_changed)
 	_on_mana_changed(GameManager.mana)
+
+
+func _create_pause_dim() -> void:
+	_pause_dim = ColorRect.new()
+	_pause_dim.color = Color(0.0, 0.0, 0.0, 0.55)
+	_pause_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pause_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pause_dim.visible = false
+	_pause_dim.z_index = 10
+	add_child(_pause_dim)
 
 
 func _create_mana_bar() -> void:
@@ -79,6 +93,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _toggle_pause() -> void:
 	_is_paused = not _is_paused
 	get_tree().paused = _is_paused
+	if _pause_dim:
+		_pause_dim.visible = _is_paused
 	if _is_paused:
 		_tween_show(pause_menu)
 	else:

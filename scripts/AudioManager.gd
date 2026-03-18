@@ -1,8 +1,8 @@
 extends Node
 
-var music_volume: float = 0.7
-var sfx_volume: float = 1.0
-var music_enabled: bool = true
+var music_volume: float = 0.5
+var sfx_volume: float = 0.6
+var music_enabled: bool = false  # TODO: replace main_theme.ogg with a better track
 var sfx_enabled: bool = true
 
 var _music_player: AudioStreamPlayer
