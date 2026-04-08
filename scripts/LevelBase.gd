@@ -71,6 +71,10 @@ func _get_maze_layout() -> PackedStringArray:
 	return PackedStringArray()
 
 
+func get_maze_layout() -> PackedStringArray:
+	return _get_maze_layout()
+
+
 func _get_wall_texture_path() -> String:
 	return "res://assets/tilesets/level1_wall.png"
 
