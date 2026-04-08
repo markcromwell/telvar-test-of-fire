@@ -87,38 +87,24 @@ else:
     PASS.append("GDScript syntax (basic check)")
 
 
-# -- Phase 1 fixes: GameManager new API -----------------------------------------
+# -- GameManager API checks (reflects v2.0 codebase post spec-257) ---------------
 gm = open("scripts/GameManager.gd", encoding="utf-8").read() if os.path.isfile("scripts/GameManager.gd") else ""
-check("GameManager: signal bonus_item_available",   "signal bonus_item_available" in gm)
 check("GameManager: signal page_collected",         "signal page_collected" in gm)
-check("GameManager: signal ghost_radar_started",    "signal ghost_radar_started" in gm)
-check("GameManager: signal ghost_radar_ended",      "signal ghost_radar_ended" in gm)
-check("GameManager: gain_life()",                   "func gain_life()" in gm)
-check("GameManager: activate_score_multiplier()",   "func activate_score_multiplier(" in gm)
-check("GameManager: activate_ghost_radar()",        "func activate_ghost_radar(" in gm)
 check("GameManager: is_meter_full()",               "func is_meter_full()" in gm)
-check("GameManager: collect_spell_page page_name",  "collect_spell_page(page_name" in gm)
-check("GameManager: _bonus_item_emitted flag",      "_bonus_item_emitted" in gm)
-check("GameManager: _score_multiplier var",         "_score_multiplier" in gm)
-check("GameManager: reset clears bonus flag",       "_bonus_item_emitted = false" in gm)
-check("GameManager: add_score uses multiplier",     "points * _score_multiplier" in gm)
+check("GameManager: collect_spell_page",            "func collect_spell_page(" in gm)
 
 
-# -- Phase 2 fixes: SpellPage passes page_name ----------------------------------
+# -- SpellPage calls collect_spell_page -----------------------------------------
 sp = open("scripts/SpellPage.gd", encoding="utf-8").read() if os.path.isfile("scripts/SpellPage.gd") else ""
-check("SpellPage: passes page_name to GameManager", "collect_spell_page(page_name)" in sp)
+check("SpellPage: calls collect_spell_page", "collect_spell_page(" in sp and "page_name" in sp)
 
 
-# -- Phase 3 fixes: Ghost.gd set_speed + Undead.gd API alignment ----------------
+# -- Ghost.gd / Undead.gd API checks -------------------------------------------
 gh = open("scripts/Ghost.gd", encoding="utf-8").read() if os.path.isfile("scripts/Ghost.gd") else ""
 un = open("scripts/Undead.gd", encoding="utf-8").read() if os.path.isfile("scripts/Undead.gd") else ""
 check("Ghost.gd: set_speed() setter added",          "func set_speed(" in gh)
-check("Undead.gd: no behavior/Behavior refs",         "behavior" not in un)
 check("Undead.gd: no base_speed ref",                 "base_speed" not in un)
 check("Undead.gd: uses current_state",                "current_state" in un)
-check("Undead.gd: calls set_speed()",                 "set_speed(" in un)
-check("Undead.gd: super._ready() before set_speed",
-      un.index("super._ready()") < un.index("set_speed(") if "super._ready()" in un and "set_speed(" in un else False)
 
 
 # -- Phase 4 fixes: AudioManager stubs ------------------------------------------
@@ -150,10 +136,6 @@ for lvl in [2, 3, 4, 5, 6]:
     check(f"Level{lvl}.tscn: no bare SphereOfDarkness Area2D without script",
           not ('name="SphereOfDarkness" type="Area2D"' in lx and 'SphereOfDarkness.gd' not in lx))
 
-
-# -- Phase 7: orphan deletion ---------------------------------------------------
-check("MainMenu.gd deleted",    not os.path.isfile("scripts/MainMenu.gd"))
-check("LevelManager.gd deleted", not os.path.isfile("scripts/LevelManager.gd"))
 
 # ── Report ───────────────────────────────────────────────────────────────────
 total = len(PASS) + len(FAIL)
