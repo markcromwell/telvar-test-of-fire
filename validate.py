@@ -66,7 +66,7 @@ KNOWN_BAD = [
 ]
 gd_errors = []
 for root, dirs, files in os.walk("."):
-    dirs[:] = [d for d in dirs if d not in (".godot", ".git")]
+    dirs[:] = [d for d in dirs if d not in (".godot", ".git", "addons")]
     for fname in files:
         if not fname.endswith(".gd"):
             continue
